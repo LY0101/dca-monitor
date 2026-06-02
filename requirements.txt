@@ -1,0 +1,7 @@
+yfinance
+pandas-ta
+pandas
+numpy
+rich
+requests
+beautifulsoup4

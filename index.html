@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>4-ETF DCA Monitor · 2026-06-02</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:#0f172a;color:#e2e8f0;
+      font-family:'Cascadia Code','Fira Code','Courier New',monospace;
+      font-size:14px;padding:24px 16px;max-width:900px;margin:0 auto;
+    }
+    h1{
+      font-size:1em;color:#94a3b8;text-align:center;
+      border-top:1px solid #334155;border-bottom:1px solid #334155;
+      padding:10px 0;margin-bottom:20px;letter-spacing:.05em;
+    }
+    .card{border:1px solid #334155;border-radius:6px;padding:16px;margin-bottom:14px}
+    .card-title{color:#94a3b8;font-size:.85em;margin-bottom:10px;letter-spacing:.03em}
+    table{width:100%;border-collapse:collapse}
+    th{color:#64748b;font-weight:normal;text-align:left;padding:4px 6px 8px 0;
+        font-size:.85em;border-bottom:1px solid #1e293b}
+    td{padding:6px 6px 6px 0;vertical-align:middle}
+    tr+tr td{border-top:1px solid #1e293b}
+    td:not(:first-child),th:not(:first-child){text-align:right}
+    .bold{font-weight:bold}
+    .dim{color:#64748b}
+    .divider{border-top:1px solid #334155;margin:10px 0}
+    .total-row td{font-weight:bold;padding-top:10px}
+    .pt-action{margin-top:10px;padding:10px;border-radius:4px;
+                background:#1e293b;font-size:.9em;line-height:1.5}
+    .footer{text-align:center;color:#475569;font-size:.8em;margin-top:20px;line-height:1.8}
+    code{background:#1e293b;padding:1px 4px;border-radius:3px;font-size:.9em}
+    @media(max-width:600px){body{font-size:12px;padding:12px 8px}}
+  </style>
+</head>
+<body>
+
+<h1>4-ETF DCA MONITOR &nbsp;·&nbsp; 2026-06-02</h1>
+
+<div class="card">
+  <div class="card-title">Prices &amp; Portfolio</div>
+  <table>
+    <thead><tr>
+      <th>ETF</th><th>Price</th><th>Cost basis</th>
+      <th>Gain</th><th>Shares</th><th>Value</th>
+    </tr></thead>
+    <tbody>
+        <tr>
+          <td class="bold">QQQ</td>
+          <td>$744.84</td>
+          <td>—</td>
+          <td style="color:#22c55e">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="bold">TQQQ</td>
+          <td>$86.78</td>
+          <td>—</td>
+          <td style="color:#22c55e">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="bold">SMH</td>
+          <td>$628.03</td>
+          <td>—</td>
+          <td style="color:#22c55e">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td class="bold">SOXL</td>
+          <td>$257.35</td>
+          <td>—</td>
+          <td style="color:#22c55e">—</td>
+          <td>—</td>
+          <td>—</td>
+        </tr></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-title">Regime Indicators</div>
+  <table>
+    <thead><tr><th>Indicator</th><th>Value</th><th>Status</th></tr></thead>
+    <tbody>
+        <tr>
+          <td>VIX</td><td>16.1</td>
+          <td style="color:#22c55e">✅ Bull zone</td>
+        </tr>
+        <tr>
+          <td>QQQ vs 200-day MA</td><td>Above (+20.4%)</td>
+          <td style="color:#22c55e">✅ Trending up</td>
+        </tr>
+        <tr>
+          <td>Drawdown from high</td><td>+0.0%</td>
+          <td style="color:#22c55e">✅ Near high</td>
+        </tr>
+        <tr>
+          <td>RSI 14-day (QQQ)</td><td>79.0</td>
+          <td style="color:#eab308">⚠️ Outside range</td>
+        </tr>
+        <tr>
+          <td>MACD</td><td>Bullish</td>
+          <td style="color:#22c55e">✅ Above signal</td>
+        </tr>
+        <tr>
+          <td>SMH vs QQQ (20d RS)</td><td>+13.2%</td>
+          <td style="color:#22c55e">✅ Semi leading</td>
+        </tr></tbody>
+  </table>
+</div>
+
+<div class="card" style="border-color:#22c55e">
+  <div class="card-title">
+    Profit-Taking Monitor &nbsp;·&nbsp;
+    <span style="color:#22c55e">HOLD</span>
+    &nbsp;·&nbsp; 1/6 signals
+  </div>
+  <table>
+    <thead><tr><th>Indicator</th><th>Value</th><th>Threshold</th><th>Status</th></tr></thead>
+    <tbody>
+        <tr>
+          <td>QQQ Forward P/E</td><td>N/A×</td>
+          <td class="dim">38× / 45× / 52×</td>
+          <td style="color:#22c55e">✅ Normal</td>
+        </tr>
+        <tr>
+          <td>RSI 14-day</td><td>79.0</td>
+          <td class="dim">78 / 83 / 88</td>
+          <td style="color:#eab308">🟡 Elevated</td>
+        </tr>
+        <tr>
+          <td>Above 200MA</td><td>+20.4%</td>
+          <td class="dim">30% / 40% / 50%</td>
+          <td style="color:#22c55e">✅ Normal</td>
+        </tr>
+        <tr>
+          <td>VIX complacency</td><td>16.1</td>
+          <td class="dim">&lt;13 / &lt;11 / &lt;10</td>
+          <td style="color:#22c55e">✅ Normal</td>
+        </tr>
+        <tr>
+          <td>12M QQQ return</td><td>+44.2%</td>
+          <td class="dim">50% / 65% / 80%</td>
+          <td style="color:#22c55e">✅ Normal</td>
+        </tr>
+        <tr>
+          <td>TQQQ gain vs cost</td><td>N/A</td>
+          <td class="dim">200% / 400% / 700%</td>
+          <td style="color:#22c55e">✅ Normal</td>
+        </tr></tbody>
+  </table>
+</div>
+
+<div class="card" style="border-color:#22c55e">
+  <div class="card-title" style="color:#22c55e">
+    TODAY'S ACTION &nbsp;·&nbsp; 🟢 BULL · Trending Up
+  </div>
+  <table>
+    <thead><tr><th>ETF</th><th>Weight</th><th>Amount</th><th>Action</th></tr></thead>
+    <tbody>
+        <tr>
+          <td class="bold">TQQQ</td>
+          <td>50%</td>
+          <td style="color:#22c55e;font-weight:bold">$5,000</td>
+          <td style="color:#22c55e">BUY</td>
+        </tr>
+        <tr>
+          <td class="bold">SOXL</td>
+          <td>50%</td>
+          <td style="color:#22c55e;font-weight:bold">$5,000</td>
+          <td style="color:#22c55e">BUY</td>
+        </tr>
+        <tr class="dim">
+          <td class="bold">QQQ</td><td>0%</td><td>—</td><td>—</td>
+        </tr>
+        <tr class="dim">
+          <td class="bold">SMH</td><td>0%</td><td>—</td><td>—</td>
+        </tr></tbody>
+  </table>
+  <div class="divider"></div>
+  <table><tbody>
+    <tr class="total-row">
+      <td>TOTAL</td><td>100%</td>
+      <td style="color:#22c55e">$10,000</td>
+      <td style="color:#22c55e">🟢 BULL · Trending Up</td>
+    </tr>
+  </tbody></table>
+  <div class="pt-action" style="color:#22c55e">
+    Profit-Taking: [HOLD] &nbsp; No action. Continue DCA as normal.
+  </div>
+</div>
+
+
+
+
+<div class="footer">
+  Regime history: 1 month on record · raw signal today: bull<br>
+  Last updated: 2026-06-02 23:11
+</div>
+
+</body>
+</html>

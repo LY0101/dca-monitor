@@ -4,154 +4,247 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DCA Monitor · 2026-06-04</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#ffffff; --s1:#f8f9fa; --s2:#f0f2f4;
-  --border:#e4e8ec; --border2:#d0d6dc;
-  --ink:#0f1923; --muted:#8a9bb0; --light:#c8d0da;
-  --green:#0d9c6e; --green-bg:#edfaf4; --green-border:#b3e8d4;
-  --amber:#c07a10; --amber-bg:#fff8ed; --amber-border:#f0d090;
-  --red:#c4243a;   --red-bg:#fff0f2;   --red-border:#f0b8c0;
-  --purple:#7c3aed;--purple-bg:#f4f0ff;--purple-border:#d4c4f8;
+  --bg:#f4f6f8; --card:#ffffff; --s1:#f1f3f5; --s2:#e8ebed;
+  --border:#e2e5e9; --border2:#cdd2d8;
+  --ink:#111827; --muted:#6b7280; --light:#9ca3af;
+  --green:#059669; --green-bg:#ecfdf5; --green-border:#6ee7b7;
+  --amber:#d97706; --amber-bg:#fffbeb; --amber-border:#fcd34d;
+  --red:#dc2626;   --red-bg:#fff1f2;   --red-border:#fca5a5;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#c4b5fd;
+  --shadow-xs:0 1px 2px rgba(0,0,0,.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.04);
+  --radius:10px;
 }
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
-body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.6}
+body{
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  background:var(--bg);color:var(--ink);
+  font-size:13px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
 
-.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.topbar-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.3px}
+/* ── TOP BAR ── */
+.topbar{
+  background:rgba(255,255,255,.92);
+  border-bottom:1px solid var(--border);
+  padding:0 20px;height:52px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;letter-spacing:-.5px}
 .topbar-logo span{color:var(--green)}
-.topbar-right{display:flex;align-items:center;gap:16px}
+.topbar-right{display:flex;align-items:center;gap:12px}
 .live-dot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
-.topbar-date{font-size:11px;color:var(--muted)}
-.refresh-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--muted);background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:5px 10px;cursor:pointer;letter-spacing:0.3px;transition:all 0.15s}
-.refresh-btn:hover{color:var(--ink);border-color:var(--border2);background:var(--s2)}
-.refresh-btn svg{transition:transform 0.4s}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2.5px rgba(5,150,105,.18)}
+.topbar-date{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+
+/* ── REFRESH BUTTON ── */
+.refresh-btn{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;
+  color:var(--muted);background:var(--card);
+  border:1px solid var(--border);border-radius:8px;
+  padding:5px 11px;cursor:pointer;transition:all .15s ease;
+  box-shadow:var(--shadow-xs);
+}
+.refresh-btn:hover{color:var(--ink);border-color:var(--border2);box-shadow:var(--shadow-sm)}
+.refresh-btn svg{transition:transform .5s cubic-bezier(.4,0,.2,1)}
 .refresh-btn.spinning svg{transform:rotate(360deg)}
 
-.nav{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 24px}
+/* ── DESKTOP NAV ── */
+.nav{
+  background:rgba(255,255,255,.92);border-bottom:1px solid var(--border);
+  display:flex;overflow-x:auto;scrollbar-width:none;padding:0 20px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
 .nav::-webkit-scrollbar{display:none}
-.ntab{padding:12px 0;margin-right:28px;font-size:12px;font-weight:500;letter-spacing:0.5px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all 0.15s}
+.ntab{
+  padding:13px 0;margin-right:24px;font-size:12px;font-weight:500;
+  border:none;background:transparent;color:var(--muted);cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;
+  transition:color .15s ease;flex-shrink:0;
+}
 .ntab:hover{color:var(--ink)}
-.ntab.active{color:var(--ink);border-bottom-color:var(--ink)}
+.ntab.active{color:var(--ink);border-bottom-color:var(--green)}
 
-.page{max-width:1040px;margin:0 auto;padding:28px 24px 80px}
+/* ── LAYOUT ── */
+.page{max-width:1040px;margin:0 auto;padding:24px 20px 90px}
 .panel{display:none}
-.panel.active{display:block;animation:fadein 0.18s ease both}
-@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.panel.active{display:block;animation:fadein .2s cubic-bezier(.4,0,.2,1) both}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
 
-.sec-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+/* ── SECTION TITLES ── */
+.sec-title{
+  font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;
+}
 .sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
-.rec-box{border-radius:6px;border:1.5px solid;padding:22px 24px;margin-bottom:28px}
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-xs)}
+
+/* ── GRIDS ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* ── RECOMMENDATION BOX ── */
+.rec-box{border-radius:var(--radius);border:1.5px solid;padding:22px 24px;margin-bottom:22px}
 .rec-box.bull {border-color:var(--green-border);background:var(--green-bg)}
 .rec-box.chop {border-color:var(--amber-border);background:var(--amber-bg)}
 .rec-box.fear1{border-color:var(--red-border);  background:var(--red-bg)}
 .rec-box.fear2{border-color:var(--purple-border);background:var(--purple-bg)}
-.rec-eyebrow{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.rec-headline{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:10px}
-.rec-desc{font-size:12px;line-height:1.9;color:var(--muted);max-width:700px}
-.rec-alloc{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
-.rec-etf{display:flex;flex-direction:column;align-items:center;min-width:72px;padding:10px 14px;background:#fff;border-radius:4px;border:1px solid var(--border)}
-.rec-etf-ticker{font-size:14px;font-weight:700}
+.rec-eyebrow{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-family:'IBM Plex Mono',monospace}
+.rec-headline{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-bottom:10px}
+.rec-desc{font-size:12.5px;line-height:1.85;color:var(--muted);max-width:680px}
+.rec-alloc{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.rec-etf{
+  display:flex;flex-direction:column;align-items:center;
+  min-width:74px;padding:12px 14px;
+  background:rgba(255,255,255,.75);border-radius:8px;
+  border:1px solid rgba(0,0,0,.07);backdrop-filter:blur(4px);
+}
+.rec-etf-ticker{font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace}
 .rec-etf-pct{font-size:10px;color:var(--muted);margin-top:2px}
-.rec-etf-amt{font-size:15px;font-weight:700;margin-top:4px}
+.rec-etf-amt{font-size:14px;font-weight:700;margin-top:4px;font-family:'IBM Plex Mono',monospace}
 
-.alert-banner{border-radius:6px;border:1.5px solid;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
-.alert-banner.hold   {border-color:var(--green-border); background:var(--green-bg)}
-.alert-banner.watch  {border-color:var(--amber-border); background:var(--amber-bg)}
-.alert-banner.caution{border-color:var(--red-border);   background:var(--red-bg)}
+/* ── ALERT BANNER ── */
+.alert-banner{border-radius:var(--radius);border:1.5px solid;padding:18px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.alert-banner.hold   {border-color:var(--green-border);background:var(--green-bg)}
+.alert-banner.watch  {border-color:var(--amber-border);background:var(--amber-bg)}
+.alert-banner.caution{border-color:var(--red-border);  background:var(--red-bg)}
 .alert-banner.extreme{border-color:var(--purple-border);background:var(--purple-bg)}
 
-.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:24px}
-.stat-cell{background:#fff;padding:14px 16px}
-.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
-.stat-val{font-size:22px;font-weight:700;font-family:'Syne',sans-serif;line-height:1}
-.stat-sub{font-size:10px;color:var(--muted);margin-top:3px}
+/* ── STAT ROW ── */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.stat-cell{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-xs);transition:box-shadow .15s ease}
+.stat-cell:hover{box-shadow:var(--shadow-sm)}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.stat-val{font-size:24px;font-weight:700;font-family:'Syne',sans-serif;line-height:1}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:4px}
 
-.card{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:18px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-
+/* ── TABLES ── */
 .tbl{width:100%;border-collapse:collapse;font-size:12px}
-.tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.tbl th{text-align:left;padding:9px 12px;font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
 .tbl th.r{text-align:right}
-.tbl td{padding:11px 12px;border-bottom:1px solid var(--s2);vertical-align:middle}
-.tbl td.r{text-align:right}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--s1);vertical-align:middle}
+.tbl td.r{text-align:right;font-family:'IBM Plex Mono',monospace}
 .tbl tr:last-child td{border-bottom:none}
-.tbl tr:hover td{background:var(--s2)}
+.tbl tr:hover td{background:var(--s1);transition:background .1s ease}
 .t-name{font-weight:600}
-.t-sub{font-size:10px;color:var(--muted)}
+.t-sub{font-size:10px;color:var(--muted);margin-top:1px}
 
-.badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase}
-.bg{background:var(--green-bg);  color:var(--green)}
-.ba{background:var(--amber-bg);  color:var(--amber)}
-.br{background:var(--red-bg);    color:var(--red)}
-.bp{background:var(--purple-bg); color:var(--purple)}
-.bm{background:var(--s2);        color:var(--muted)}
+/* ── BADGES ── */
+.badge{
+  display:inline-block;font-size:9px;font-weight:700;
+  padding:3px 9px;border-radius:100px;
+  letter-spacing:.4px;text-transform:uppercase;
+  font-family:'IBM Plex Mono',monospace;
+}
+.bg{background:var(--green-bg); color:var(--green); border:1px solid var(--green-border)}
+.ba{background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber-border)}
+.br{background:var(--red-bg);   color:var(--red);   border:1px solid var(--red-border)}
+.bp{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+.bm{background:var(--s1);       color:var(--muted); border:1px solid var(--border)}
 
+/* ── SIGNAL ROWS ── */
 .sig-list{display:flex;flex-direction:column}
-.sig-row{display:grid;grid-template-columns:190px 1fr 90px 110px 90px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--s2)}
+.sig-row{display:grid;grid-template-columns:190px 1fr 90px 110px 90px;gap:10px;align-items:center;padding:11px 0;border-bottom:1px solid var(--s1)}
 .sig-row:last-child{border-bottom:none}
 .sig-name{font-size:12px;font-weight:500}
-.sig-bar-track{height:4px;background:var(--s2);border-radius:2px;overflow:hidden}
-.sig-bar-fill{height:100%;border-radius:2px;transition:width 0.4s}
-.sig-val{font-size:12px;text-align:right;font-weight:600}
-.sig-sub{font-size:10px;color:var(--muted);text-align:right}
+.sig-bar-track{height:5px;background:var(--s2);border-radius:100px;overflow:hidden}
+.sig-bar-fill{height:100%;border-radius:100px;animation:fillBar .9s cubic-bezier(.4,0,.2,1) both}
+@keyframes fillBar{from{width:0!important}}
+.sig-val{font-size:12px;text-align:right;font-weight:600;font-family:'IBM Plex Mono',monospace}
+.sig-sub{font-size:10px;color:var(--muted);text-align:right;font-family:'IBM Plex Mono',monospace}
 .sig-status{text-align:right}
+.sig-name-block{display:flex;flex-direction:column;gap:3px}
+.sig-desc{font-size:11px;color:var(--muted);line-height:1.5}
+.pt-sig-row{grid-template-columns:210px 1fr 80px 130px 90px;align-items:start;padding:14px 0}
 
-.alloc-bar-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--s2)}
+/* ── ALLOCATION BARS ── */
+.alloc-bar-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--s1)}
 .alloc-bar-row:last-child{border-bottom:none}
-.alloc-t{font-size:13px;font-weight:700;width:48px;flex-shrink:0}
-.alloc-track{flex:1;height:5px;background:var(--s2);border-radius:2px;overflow:hidden}
-.alloc-fill{height:100%;border-radius:2px}
-.alloc-p{font-size:11px;color:var(--muted);width:32px;text-align:right}
-.alloc-d{font-size:13px;font-weight:700;width:64px;text-align:right}
+.alloc-t{font-size:13px;font-weight:700;width:48px;flex-shrink:0;font-family:'IBM Plex Mono',monospace}
+.alloc-track{flex:1;height:6px;background:var(--s2);border-radius:100px;overflow:hidden}
+.alloc-fill{height:100%;border-radius:100px;animation:fillBar .9s cubic-bezier(.4,0,.2,1) both}
+.alloc-p{font-size:11px;color:var(--muted);width:32px;text-align:right;font-family:'IBM Plex Mono',monospace}
+.alloc-d{font-size:13px;font-weight:700;width:68px;text-align:right;font-family:'IBM Plex Mono',monospace}
 
-.rtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
-.rtab{padding:10px 0;margin-right:24px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.12s;white-space:nowrap}
-.rtab.active{color:var(--ink);border-bottom-color:var(--ink)}
+/* ── REGIME TABS ── */
+.rtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;overflow-x:auto;scrollbar-width:none}
+.rtabs::-webkit-scrollbar{display:none}
+.rtab{padding:10px 0;margin-right:24px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s ease;white-space:nowrap;flex-shrink:0}
+.rtab.active{color:var(--ink);border-bottom-color:var(--green)}
 .rpanel{display:none}
-.rpanel.active{display:block;animation:fadein 0.15s ease both}
+.rpanel.active{display:block;animation:fadein .15s ease both}
 
-.reg-summary{margin-top:14px;padding:12px 14px;border-radius:4px;background:#fff;border-left:3px solid;font-size:12px;line-height:1.6}
+/* ── REGIME MAP ── */
+.regime-map-track{display:flex;height:34px;border-radius:8px;overflow:hidden;margin:20px 0 6px;position:relative}
+.rz{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
+.vix-marker{position:absolute;top:0;bottom:0;width:2.5px;z-index:5;transform:translateX(-50%);border-radius:2px}
+.vix-marker-label{position:absolute;top:-20px;transform:translateX(-50%);font-size:10px;font-weight:700;white-space:nowrap;font-family:'IBM Plex Mono',monospace}
+.reg-summary{margin-top:14px;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,.8);border-left:3px solid;font-size:12px;line-height:1.6}
 
-.portfolio-form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+/* ── PORTFOLIO ── */
+.portfolio-form{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
 .pf-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-.pf-input-wrap{display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;background:#fff}
-.pf-input-wrap:focus-within{border-color:var(--ink)}
-.pf-prefix{padding:10px 12px;background:var(--s2);font-size:12px;color:var(--muted);border-right:1px solid var(--border);flex-shrink:0}
+.pf-input-wrap{display:flex;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden;background:#fff;transition:border-color .15s ease,box-shadow .15s ease}
+.pf-input-wrap:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(5,150,105,.1)}
+.pf-prefix{padding:10px 12px;background:var(--s1);font-size:12px;color:var(--muted);border-right:1px solid var(--border);flex-shrink:0;font-family:'IBM Plex Mono',monospace}
 .pf-input{border:none;outline:none;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);background:#fff;width:100%}
-.pf-value-col{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:13px;font-weight:700}
+.pf-value-col{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px;font-weight:700;font-family:'IBM Plex Mono',monospace}
 .pf-total{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
-.pf-total-cell{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:14px;text-align:center}
-.pf-total-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.pf-total-cell{background:var(--s1);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+.pf-total-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
 .pf-total-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
-.pf-save-btn{margin-top:14px;padding:11px 24px;background:var(--ink);color:#fff;border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:background 0.15s}
-.pf-save-btn:hover{background:#1e2f40}
+.pf-save-btn{margin-top:16px;padding:11px 24px;background:var(--ink);color:#fff;border:none;border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .15s ease;box-shadow:var(--shadow-xs)}
+.pf-save-btn:hover{background:#1e2f40;box-shadow:var(--shadow);transform:translateY(-1px)}
 .pf-saved-notice{display:none;font-size:11px;color:var(--green);margin-left:12px;font-weight:600}
 
+/* ── SLIDER ── */
 .slider-wrap{display:flex;align-items:center;gap:14px}
-.slider-wrap input[type=range]{flex:1;accent-color:var(--ink);cursor:pointer}
+.slider-wrap input[type=range]{flex:1;accent-color:var(--green);cursor:pointer}
 .slider-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;min-width:80px}
 
+/* ── MISC ── */
 .note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.footer{text-align:center;color:var(--light);font-size:11px;margin-top:32px;line-height:1.8}
-.regime-map-track{display:flex;height:32px;border-radius:4px;overflow:hidden;margin:20px 0 6px;position:relative}
-.rz{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:0.3px;text-transform:uppercase}
-.vix-marker{position:absolute;top:0;bottom:0;width:2px;z-index:5;transform:translateX(-50%)}
-.vix-marker-label{position:absolute;top:-18px;transform:translateX(-50%);font-size:10px;font-weight:700;white-space:nowrap}
-.sig-name-block{display:flex;flex-direction:column;gap:2px}
-.sig-desc{font-size:10px;color:var(--muted);line-height:1.4}
-.pt-sig-row{grid-template-columns:200px 1fr 80px 130px 90px;align-items:start}
+.footer{text-align:center;color:var(--light);font-size:11px;margin-top:32px;line-height:1.8;font-family:'IBM Plex Mono',monospace}
 
-@media(max-width:680px){
-  .grid2,.grid3,.stat-row{grid-template-columns:1fr}
-  .sig-row{grid-template-columns:1fr auto}
+/* ── MOBILE BOTTOM NAV ── */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}
+.mobile-nav-inner{display:flex}
+.mnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;font-size:9px;font-weight:600;letter-spacing:.3px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .15s ease}
+.mnav-btn.active{color:var(--green)}
+.mnav-icon{font-size:18px;line-height:1}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .stat-row{grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .page{padding:16px 14px 96px}
+  .grid2{grid-template-columns:1fr}
+  .stat-row{grid-template-columns:1fr 1fr;gap:8px}
+  .stat-val{font-size:20px}
+  .rec-headline{font-size:18px}
+  .rec-box{padding:16px 18px}
+  .sig-row{grid-template-columns:1fr auto;gap:8px}
   .sig-row>*:nth-child(2),.sig-row>*:nth-child(3){display:none}
+  .pt-sig-row{grid-template-columns:1fr auto;gap:8px}
+  .pt-sig-row>*:nth-child(2),.pt-sig-row>*:nth-child(3),.pt-sig-row>*:nth-child(4){display:none}
   .portfolio-form,.pf-total{grid-template-columns:1fr}
+  .tbl th:nth-child(n+4),.tbl td:nth-child(n+4){display:none}
+  .alert-banner{flex-direction:column;gap:12px;align-items:flex-start}
+  .nav{display:none}
+  .mobile-nav{display:block}
 }
 </style>
 </head>
@@ -161,7 +254,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
 <div class="topbar">
   <div class="topbar-logo">DCA<span>·</span>Monitor</div>
   <div class="topbar-right">
-    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-04 22:02</div>
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-04 22:10</div>
     <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
@@ -170,13 +263,24 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   </div>
 </div>
 
-<!-- NAV -->
+<!-- DESKTOP NAV -->
 <div class="nav">
   <button class="ntab active" onclick="tab('dashboard',this)">Dashboard</button>
   <button class="ntab" onclick="tab('portfolio',this)">My Portfolio</button>
   <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
+</div>
+
+<!-- MOBILE BOTTOM NAV -->
+<div class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mnav-btn active" onclick="tabM('dashboard',this)"><div class="mnav-icon">📊</div>Dashboard</button>
+    <button class="mnav-btn" onclick="tabM('portfolio',this)"><div class="mnav-icon">💼</div>Portfolio</button>
+    <button class="mnav-btn" onclick="tabM('regime',this)"><div class="mnav-icon">🗺️</div>Regime</button>
+    <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
+    <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
+  </div>
 </div>
 
 <div class="page">
@@ -188,7 +292,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   <div class="rec-box bull">
     <div class="rec-eyebrow" style="color:var(--green)">Regime: BULL · 2026-06-04</div>
     <div class="rec-headline">Deploy $10,000 this month into TQQQ + SOXL</div>
-    <div class="rec-desc">VIX at 16.1 is well below the 20 threshold. QQQ is +18.5% above its 200-day moving average and RSI at 66.9 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
+    <div class="rec-desc">VIX at 16.0 is well below the 20 threshold. QQQ is +18.4% above its 200-day moving average and RSI at 66.7 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
     <div class="rec-alloc">
       <div class="rec-etf">
         <div class="rec-etf-ticker" style="color:var(--amber)">TQQQ</div>
@@ -228,17 +332,17 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   <div class="stat-row">
     <div class="stat-cell">
       <div class="stat-label">VIX</div>
-      <div class="stat-val" style="color:var(--green)">16.1</div>
+      <div class="stat-val" style="color:var(--green)">16.0</div>
       <div class="stat-sub">Bull zone · below 20</div>
     </div>
     <div class="stat-cell">
       <div class="stat-label">QQQ vs 200MA</div>
-      <div class="stat-val" style="color:var(--green)">+18.5%</div>
+      <div class="stat-val" style="color:var(--green)">+18.4%</div>
       <div class="stat-sub">Above 200-day MA</div>
     </div>
     <div class="stat-cell">
       <div class="stat-label">RSI 35-day</div>
-      <div class="stat-val" style="color:var(--green)">66.9</div>
+      <div class="stat-val" style="color:var(--green)">66.7</div>
       <div class="stat-sub">Healthy range</div>
     </div>
     <div class="stat-cell">
@@ -262,15 +366,15 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <tbody>
         <tr>
           <td><div class="t-name">QQQ</div><div class="t-sub">Nasdaq-100 · 1×</div></td>
-          <td class="r">$734.96</td>
+          <td class="r">$734.37</td>
           <td class="r" id="d-qqq-cost">$745.00</td>
-          <td class="r" style="color:var(--red)" id="d-qqq-gain">-1.3%</td>
+          <td class="r" style="color:var(--red)" id="d-qqq-gain">-1.4%</td>
           <td class="r" id="d-qqq-shares">1</td>
-          <td class="r" id="d-qqq-val">$735</td>
+          <td class="r" id="d-qqq-val">$734</td>
         </tr>
         <tr>
           <td><div class="t-name">TQQQ</div><div class="t-sub">3× Nasdaq · Leveraged</div></td>
-          <td class="r">$83.29</td>
+          <td class="r">$83.10</td>
           <td class="r" id="d-tqqq-cost">—</td>
           <td class="r" style="color:var(--green)" id="d-tqqq-gain">—</td>
           <td class="r" id="d-tqqq-shares">—</td>
@@ -278,15 +382,15 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
         </tr>
         <tr>
           <td><div class="t-name">SMH</div><div class="t-sub">Semiconductor · 1×</div></td>
-          <td class="r">$609.51</td>
+          <td class="r">$608.53</td>
           <td class="r" id="d-smh-cost">$628.00</td>
-          <td class="r" style="color:var(--red)" id="d-smh-gain">-2.9%</td>
+          <td class="r" style="color:var(--red)" id="d-smh-gain">-3.1%</td>
           <td class="r" id="d-smh-shares">1</td>
-          <td class="r" id="d-smh-val">$610</td>
+          <td class="r" id="d-smh-val">$609</td>
         </tr>
         <tr>
           <td><div class="t-name">SOXL</div><div class="t-sub">3× Semiconductor · Leveraged</div></td>
-          <td class="r">$236.59</td>
+          <td class="r">$234.38</td>
           <td class="r" id="d-soxl-cost">—</td>
           <td class="r" style="color:var(--green)" id="d-soxl-gain">—</td>
           <td class="r" id="d-soxl-shares">—</td>
@@ -299,8 +403,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   <div class="card" style="margin-bottom:14px">
     <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">VIX Regime Map — which zone are we in?</div>
     <div style="position:relative;padding-top:22px">
-      <div class="vix-marker-label" style="left:24.8%;color:var(--green)">VIX 16.1 ▼</div>
-      <div class="vix-marker" style="left:24.8%;background:var(--green)"></div>
+      <div class="vix-marker-label" style="left:24.6%;color:var(--green)">VIX 16.0 ▼</div>
+      <div class="vix-marker" style="left:24.6%;background:var(--green)"></div>
       <div class="regime-map-track">
         <div class="rz" style="width:30.8%;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)">🟢 BULL · &lt;20</div>
         <div class="rz" style="width:15.4%;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);border-left:none">🟡 CHOP · 20-30</div>
@@ -322,26 +426,26 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
     <div class="sig-list">
       <div class="sig-row">
         <div class="sig-name">VIX Level</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:24.8%;background:var(--green)"></div></div>
-        <div class="sig-val">16.1</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:24.6%;background:var(--green)"></div></div>
+        <div class="sig-val">16.0</div>
         <div class="sig-status"><span class="badge bg">✅ Bull zone</span></div>
       </div>
       <div class="sig-row">
         <div class="sig-name">QQQ vs 200-day MA</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:48.1%;background:var(--green)"></div></div>
-        <div class="sig-val">Above (+18.5%)</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:48.0%;background:var(--green)"></div></div>
+        <div class="sig-val">Above (+18.4%)</div>
         <div class="sig-status"><span class="badge bg">✅ Above</span></div>
       </div>
       <div class="sig-row">
         <div class="sig-name">Drawdown from 52W high</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:3.0%;background:var(--green)"></div></div>
-        <div class="sig-val">-1.5%</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:3.2%;background:var(--green)"></div></div>
+        <div class="sig-val">-1.6%</div>
         <div class="sig-status"><span class="badge bg">✅ Near high</span></div>
       </div>
       <div class="sig-row">
         <div class="sig-name">RSI 35-day (QQQ)</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:66.9%;background:var(--green)"></div></div>
-        <div class="sig-val">66.9</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:66.7%;background:var(--green)"></div></div>
+        <div class="sig-val">66.7</div>
         <div class="sig-status"><span class="badge bg">✅ Healthy</span></div>
       </div>
       <div class="sig-row">
@@ -352,11 +456,11 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       </div>
       <div class="sig-row">
         <div class="sig-name">SMH vs QQQ (20-day RS)</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:67.5%;background:var(--green)"></div></div>
-        <div class="sig-val">+5.2%</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:67.1%;background:var(--green)"></div></div>
+        <div class="sig-val">+5.1%</div>
         <div class="sig-status"><span class="badge bg">✅ Leading</span></div>
       </div></div>
-    <div class="reg-summary" style="border-color:var(--green);color:var(--green)">VIX 16.1 → <strong>BULL</strong> confirmed · 1 month on record.</div>
+    <div class="reg-summary" style="border-color:var(--green);color:var(--green)">VIX 16.0 → <strong>BULL</strong> confirmed · 1 month on record.</div>
   </div>
 
 </div>
@@ -481,7 +585,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Entry conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Bull threshold</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.1 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+18.5%) ✅</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">66.9 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+5.2% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.0 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+18.4%) ✅</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">66.7 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+5.1% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -526,7 +630,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Chop conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Chop rule</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">20 – 30</td><td class="r" style="color:var(--red)">16.1 ❌</td></tr><tr><td>Switch from Bull</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--muted)">1-month confirmation ·</td></tr><tr><td>Switch from Fear</td><td class="r" style="color:var(--muted)">2 months</td><td class="r" style="color:var(--muted)">2-month confirmation ·</td></tr><tr><td>New DCA</td><td class="r" style="color:var(--muted)">QQQ + SMH only</td><td class="r" style="color:var(--muted)">No new leveraged buys ·</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">20 – 30</td><td class="r" style="color:var(--red)">16.0 ❌</td></tr><tr><td>Switch from Bull</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--muted)">1-month confirmation ·</td></tr><tr><td>Switch from Fear</td><td class="r" style="color:var(--muted)">2 months</td><td class="r" style="color:var(--muted)">2-month confirmation ·</td></tr><tr><td>New DCA</td><td class="r" style="color:var(--muted)">QQQ + SMH only</td><td class="r" style="color:var(--muted)">No new leveraged buys ·</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -571,7 +675,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Fear I conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear I range</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.1 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-1.5% ❌</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">66.9 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.0 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-1.6% ❌</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">66.7 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -616,7 +720,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Fear II conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear II rule</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Above 45</td><td class="r" style="color:var(--red)">16.1 ❌</td></tr><tr><td>Budget</td><td class="r" style="color:var(--muted)">$30,000 (3×)</td><td class="r" style="color:var(--muted)">Pre-funded reserve ·</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">None — immediate</td><td class="r" style="color:var(--muted)">Deploy same day ·</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Above 45</td><td class="r" style="color:var(--red)">16.0 ❌</td></tr><tr><td>Budget</td><td class="r" style="color:var(--muted)">$30,000 (3×)</td><td class="r" style="color:var(--muted)">Pre-funded reserve ·</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">None — immediate</td><td class="r" style="color:var(--muted)">Deploy same day ·</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Split A · Max aggression · $30,000</div>
@@ -698,8 +802,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
           <div class="sig-name">QQQ P/E (trailing)</div>
           <div class="sig-desc">QQQ's trailing 12-month price-to-earnings ratio, sourced from Yahoo Finance. Reflects the weighted P/E of all 100 Nasdaq-100 holdings. Elevated readings mean the market is priced for perfection — any earnings miss hits hard. Dot-com peak (2000): 54×. Note: thresholds were calibrated for forward P/E; use this as a directional signal.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:46.4%;background:var(--green)"></div></div>
-        <div class="sig-val">35.9×</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:46.2%;background:var(--green)"></div></div>
+        <div class="sig-val">35.8×</div>
         <div class="sig-sub">38× · 45× · 52×</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -708,8 +812,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
           <div class="sig-name">RSI 35-day (QQQ)</div>
           <div class="sig-desc">QQQ's Relative Strength Index calculated on 35 trading days of daily closing prices. RSI measures how fast and how much QQQ has risen vs fallen recently, on a 0–100 scale. A 35-day window is deliberately slower than the standard 14-day — it filters out short-term noise and better suits monthly DCA decisions. Above 78: QQQ has been gaining unusually fast for an extended period — momentum is likely stretched.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:44.8%;background:var(--green)"></div></div>
-        <div class="sig-val">66.9</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:44.5%;background:var(--green)"></div></div>
+        <div class="sig-val">66.7</div>
         <div class="sig-sub">78 · 83 · 88</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -718,8 +822,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
           <div class="sig-name">Distance above 200-day MA</div>
           <div class="sig-desc">How far QQQ's current price sits above its 200-day simple moving average of daily closes. The 200MA is the most-watched long-term trend line. When QQQ runs 30%+ above it, the market is historically extended — sharp pullbacks become more likely even without a trend reversal. Historically, readings above 40% have preceded corrections of 15–25%.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:30.8%;background:var(--green)"></div></div>
-        <div class="sig-val">+18.5%</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:30.7%;background:var(--green)"></div></div>
+        <div class="sig-val">+18.4%</div>
         <div class="sig-sub">30% · 40% · 50%</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -728,8 +832,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
           <div class="sig-name">VIX Complacency (inverted signal)</div>
           <div class="sig-desc">The CBOE VIX measures the market's expected 30-day S&P 500 volatility, derived from options prices. This indicator is INVERTED — a lower VIX is more dangerous here. When VIX drops below 13, traders are paying almost nothing for downside protection, signalling extreme complacency. Historically, VIX below 10–12 has preceded significant corrections. Normal bull market VIX range: 13–20.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:25.7%;background:var(--green)"></div></div>
-        <div class="sig-val">16.1</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:26.7%;background:var(--green)"></div></div>
+        <div class="sig-val">16.0</div>
         <div class="sig-sub">below 13 · 11 · 10</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -738,8 +842,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
           <div class="sig-name">12-month QQQ return</div>
           <div class="sig-desc">QQQ's total price return over the past 252 trading days (~1 calendar year), using daily closes. A 50%+ one-year gain puts QQQ in historically stretched territory — forward returns over the following 12 months are significantly below average when this fires. This is not a timing signal — it measures whether recent gains have been unusually large and whether a cooling-off period is statistically overdue.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.5%;background:var(--green)"></div></div>
-        <div class="sig-val">+40.1%</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.4%;background:var(--green)"></div></div>
+        <div class="sig-val">+39.9%</div>
         <div class="sig-sub">50% · 65% · 80%</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -845,11 +949,11 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
 
 </div><!-- /page -->
 
-<div class="footer">Last updated: 2026-06-04 22:02 &nbsp;·&nbsp; 1 month of regime history on record</div>
+<div class="footer">Last updated: 2026-06-04 22:10 &nbsp;·&nbsp; 1 month of regime history on record</div>
 
 <script>
 // ── injected live data ──
-const PRICES     = {"QQQ": 734.96, "TQQQ": 83.29, "SMH": 609.51, "SOXL": 236.59};
+const PRICES     = {"QQQ": 734.37, "TQQQ": 83.1, "SMH": 608.53, "SOXL": 234.38};
 const CONFIG_PF  = {"qqq": {"shares": 1, "cost": 745.0}, "tqqq": {"shares": 0, "cost": 0.0}, "smh": {"shares": 1, "cost": 628.0}, "soxl": {"shares": 0, "cost": 0.0}};
 const ALLOC_W    = {"bull": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "chop": {"TQQQ": 0.0, "SOXL": 0.0, "QQQ": 0.5, "SMH": 0.5}, "fear1": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "fear2": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}};
 const ETF_COLORS = {QQQ:'var(--ink)',TQQQ:'var(--amber)',SMH:'var(--ink)',SOXL:'var(--red)'};
@@ -879,8 +983,26 @@ updateClock(); setInterval(updateClock,10000);
 function tab(id,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mnav-btn').forEach(t=>t.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');
   btn.classList.add('active');
+  // sync mobile nav
+  document.querySelectorAll('.mnav-btn').forEach(b=>{
+    if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function tabM(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mnav-btn').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  // sync desktop nav
+  document.querySelectorAll('.ntab').forEach(b=>{
+    if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+id+"'"))b.classList.add('active');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function switchR(id,btn){
   document.querySelectorAll('.rpanel').forEach(p=>p.classList.remove('active'));

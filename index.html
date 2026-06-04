@@ -1,212 +1,995 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>4-ETF DCA Monitor · 2026-06-02</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      background:#f8fafc;color:#1e293b;
-      font-family:'Cascadia Code','Fira Code','Courier New',monospace;
-      font-size:14px;padding:24px 16px;max-width:900px;margin:0 auto;
-    }
-    h1{
-      font-size:1em;color:#64748b;text-align:center;
-      border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;
-      padding:10px 0;margin-bottom:20px;letter-spacing:.05em;
-    }
-    .card{border:1px solid #e2e8f0;border-radius:6px;padding:16px;margin-bottom:14px;background:#fff}
-    .card-title{color:#64748b;font-size:.85em;margin-bottom:10px;letter-spacing:.03em}
-    table{width:100%;border-collapse:collapse}
-    th{color:#94a3b8;font-weight:normal;text-align:left;padding:4px 6px 8px 0;
-        font-size:.85em;border-bottom:1px solid #f1f5f9}
-    td{padding:6px 6px 6px 0;vertical-align:middle}
-    tr+tr td{border-top:1px solid #f1f5f9}
-    td:not(:first-child),th:not(:first-child){text-align:right}
-    .bold{font-weight:bold}
-    .dim{color:#94a3b8}
-    .divider{border-top:1px solid #e2e8f0;margin:10px 0}
-    .total-row td{font-weight:bold;padding-top:10px}
-    .pt-action{margin-top:10px;padding:10px;border-radius:4px;
-                background:#f8fafc;font-size:.9em;line-height:1.5}
-    .footer{text-align:center;color:#94a3b8;font-size:.8em;margin-top:20px;line-height:1.8}
-    code{background:#f1f5f9;color:#1e293b;padding:1px 4px;border-radius:3px;font-size:.9em}
-    @media(max-width:600px){body{font-size:12px;padding:12px 8px}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DCA Monitor · 2026-06-04</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#ffffff; --s1:#f8f9fa; --s2:#f0f2f4;
+  --border:#e4e8ec; --border2:#d0d6dc;
+  --ink:#0f1923; --muted:#8a9bb0; --light:#c8d0da;
+  --green:#0d9c6e; --green-bg:#edfaf4; --green-border:#b3e8d4;
+  --amber:#c07a10; --amber-bg:#fff8ed; --amber-border:#f0d090;
+  --red:#c4243a;   --red-bg:#fff0f2;   --red-border:#f0b8c0;
+  --purple:#7c3aed;--purple-bg:#f4f0ff;--purple-border:#d4c4f8;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.6}
+
+.topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;height:48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;letter-spacing:-0.3px}
+.topbar-logo span{color:var(--green)}
+.topbar-right{display:flex;align-items:center;gap:16px}
+.live-dot{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.topbar-date{font-size:11px;color:var(--muted)}
+.refresh-btn{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;font-family:'IBM Plex Mono',monospace;color:var(--muted);background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:5px 10px;cursor:pointer;letter-spacing:0.3px;transition:all 0.15s}
+.refresh-btn:hover{color:var(--ink);border-color:var(--border2);background:var(--s2)}
+.refresh-btn svg{transition:transform 0.4s}
+.refresh-btn.spinning svg{transform:rotate(360deg)}
+
+.nav{background:#fff;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 24px}
+.nav::-webkit-scrollbar{display:none}
+.ntab{padding:12px 0;margin-right:28px;font-size:12px;font-weight:500;letter-spacing:0.5px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all 0.15s}
+.ntab:hover{color:var(--ink)}
+.ntab.active{color:var(--ink);border-bottom-color:var(--ink)}
+
+.page{max-width:1040px;margin:0 auto;padding:28px 24px 80px}
+.panel{display:none}
+.panel.active{display:block;animation:fadein 0.18s ease both}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.sec-title{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.rec-box{border-radius:6px;border:1.5px solid;padding:22px 24px;margin-bottom:28px}
+.rec-box.bull {border-color:var(--green-border);background:var(--green-bg)}
+.rec-box.chop {border-color:var(--amber-border);background:var(--amber-bg)}
+.rec-box.fear1{border-color:var(--red-border);  background:var(--red-bg)}
+.rec-box.fear2{border-color:var(--purple-border);background:var(--purple-bg)}
+.rec-eyebrow{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.rec-headline{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-0.5px;line-height:1.15;margin-bottom:10px}
+.rec-desc{font-size:12px;line-height:1.9;color:var(--muted);max-width:700px}
+.rec-alloc{display:flex;gap:12px;margin-top:18px;flex-wrap:wrap}
+.rec-etf{display:flex;flex-direction:column;align-items:center;min-width:72px;padding:10px 14px;background:#fff;border-radius:4px;border:1px solid var(--border)}
+.rec-etf-ticker{font-size:14px;font-weight:700}
+.rec-etf-pct{font-size:10px;color:var(--muted);margin-top:2px}
+.rec-etf-amt{font-size:15px;font-weight:700;margin-top:4px}
+
+.alert-banner{border-radius:6px;border:1.5px solid;padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.alert-banner.hold   {border-color:var(--green-border); background:var(--green-bg)}
+.alert-banner.watch  {border-color:var(--amber-border); background:var(--amber-bg)}
+.alert-banner.caution{border-color:var(--red-border);   background:var(--red-bg)}
+.alert-banner.extreme{border-color:var(--purple-border);background:var(--purple-bg)}
+
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:6px;overflow:hidden;margin-bottom:24px}
+.stat-cell{background:#fff;padding:14px 16px}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;font-family:'Syne',sans-serif;line-height:1}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px}
+
+.card{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{text-align:left;padding:8px 12px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
+.tbl th.r{text-align:right}
+.tbl td{padding:11px 12px;border-bottom:1px solid var(--s2);vertical-align:middle}
+.tbl td.r{text-align:right}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--s2)}
+.t-name{font-weight:600}
+.t-sub{font-size:10px;color:var(--muted)}
+
+.badge{display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:0.5px;text-transform:uppercase}
+.bg{background:var(--green-bg);  color:var(--green)}
+.ba{background:var(--amber-bg);  color:var(--amber)}
+.br{background:var(--red-bg);    color:var(--red)}
+.bp{background:var(--purple-bg); color:var(--purple)}
+.bm{background:var(--s2);        color:var(--muted)}
+
+.sig-list{display:flex;flex-direction:column}
+.sig-row{display:grid;grid-template-columns:190px 1fr 90px 110px 90px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--s2)}
+.sig-row:last-child{border-bottom:none}
+.sig-name{font-size:12px;font-weight:500}
+.sig-bar-track{height:4px;background:var(--s2);border-radius:2px;overflow:hidden}
+.sig-bar-fill{height:100%;border-radius:2px;transition:width 0.4s}
+.sig-val{font-size:12px;text-align:right;font-weight:600}
+.sig-sub{font-size:10px;color:var(--muted);text-align:right}
+.sig-status{text-align:right}
+
+.alloc-bar-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--s2)}
+.alloc-bar-row:last-child{border-bottom:none}
+.alloc-t{font-size:13px;font-weight:700;width:48px;flex-shrink:0}
+.alloc-track{flex:1;height:5px;background:var(--s2);border-radius:2px;overflow:hidden}
+.alloc-fill{height:100%;border-radius:2px}
+.alloc-p{font-size:11px;color:var(--muted);width:32px;text-align:right}
+.alloc-d{font-size:13px;font-weight:700;width:64px;text-align:right}
+
+.rtabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:20px}
+.rtab{padding:10px 0;margin-right:24px;font-size:12px;font-weight:500;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.12s;white-space:nowrap}
+.rtab.active{color:var(--ink);border-bottom-color:var(--ink)}
+.rpanel{display:none}
+.rpanel.active{display:block;animation:fadein 0.15s ease both}
+
+.reg-summary{margin-top:14px;padding:12px 14px;border-radius:4px;background:#fff;border-left:3px solid;font-size:12px;line-height:1.6}
+
+.portfolio-form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.pf-label{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.pf-input-wrap{display:flex;gap:0;border:1px solid var(--border2);border-radius:4px;overflow:hidden;background:#fff}
+.pf-input-wrap:focus-within{border-color:var(--ink)}
+.pf-prefix{padding:10px 12px;background:var(--s2);font-size:12px;color:var(--muted);border-right:1px solid var(--border);flex-shrink:0}
+.pf-input{border:none;outline:none;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--ink);background:#fff;width:100%}
+.pf-value-col{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:13px;font-weight:700}
+.pf-total{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.pf-total-cell{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:14px;text-align:center}
+.pf-total-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.pf-total-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.pf-save-btn{margin-top:14px;padding:11px 24px;background:var(--ink);color:#fff;border:none;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;transition:background 0.15s}
+.pf-save-btn:hover{background:#1e2f40}
+.pf-saved-notice{display:none;font-size:11px;color:var(--green);margin-left:12px;font-weight:600}
+
+.slider-wrap{display:flex;align-items:center;gap:14px}
+.slider-wrap input[type=range]{flex:1;accent-color:var(--ink);cursor:pointer}
+.slider-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;min-width:80px}
+
+.note{font-size:11px;color:var(--muted);line-height:1.8;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.footer{text-align:center;color:var(--light);font-size:11px;margin-top:32px;line-height:1.8}
+.regime-map-track{display:flex;height:32px;border-radius:4px;overflow:hidden;margin:20px 0 6px;position:relative}
+.rz{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;letter-spacing:0.3px;text-transform:uppercase}
+.vix-marker{position:absolute;top:0;bottom:0;width:2px;z-index:5;transform:translateX(-50%)}
+.vix-marker-label{position:absolute;top:-18px;transform:translateX(-50%);font-size:10px;font-weight:700;white-space:nowrap}
+.sig-name-block{display:flex;flex-direction:column;gap:2px}
+.sig-desc{font-size:10px;color:var(--muted);line-height:1.4}
+.pt-sig-row{grid-template-columns:200px 1fr 80px 130px 90px;align-items:start}
+
+@media(max-width:680px){
+  .grid2,.grid3,.stat-row{grid-template-columns:1fr}
+  .sig-row{grid-template-columns:1fr auto}
+  .sig-row>*:nth-child(2),.sig-row>*:nth-child(3){display:none}
+  .portfolio-form,.pf-total{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
 
-<h1>4-ETF DCA MONITOR &nbsp;·&nbsp; 2026-06-02</h1>
-
-<div class="card">
-  <div class="card-title">Prices &amp; Portfolio</div>
-  <table>
-    <thead><tr>
-      <th>ETF</th><th>Price</th><th>Cost basis</th>
-      <th>Gain</th><th>Shares</th><th>Value</th>
-    </tr></thead>
-    <tbody>
-        <tr>
-          <td class="bold">QQQ</td>
-          <td>$745.29</td>
-          <td>$745.00</td>
-          <td style="color:#22c55e">+0.0%</td>
-          <td>$1</td>
-          <td>$745</td>
-        </tr>
-        <tr>
-          <td class="bold">TQQQ</td>
-          <td>$86.94</td>
-          <td>—</td>
-          <td style="color:#22c55e">—</td>
-          <td>—</td>
-          <td>—</td>
-        </tr>
-        <tr>
-          <td class="bold">SMH</td>
-          <td>$628.78</td>
-          <td>$628.00</td>
-          <td style="color:#22c55e">+0.1%</td>
-          <td>$1</td>
-          <td>$629</td>
-        </tr>
-        <tr>
-          <td class="bold">SOXL</td>
-          <td>$259.33</td>
-          <td>—</td>
-          <td style="color:#22c55e">—</td>
-          <td>—</td>
-          <td>—</td>
-        </tr></tbody>
-  </table>
-</div>
-
-<div class="card">
-  <div class="card-title">Regime Indicators</div>
-  <table>
-    <thead><tr><th>Indicator</th><th>Value</th><th>Status</th></tr></thead>
-    <tbody>
-        <tr>
-          <td>VIX</td><td>16.1</td>
-          <td style="color:#22c55e">✅ Bull zone</td>
-        </tr>
-        <tr>
-          <td>QQQ vs 200-day MA</td><td>Above (+20.5%)</td>
-          <td style="color:#22c55e">✅ Trending up</td>
-        </tr>
-        <tr>
-          <td>Drawdown from high</td><td>+0.0%</td>
-          <td style="color:#22c55e">✅ Near high</td>
-        </tr>
-        <tr>
-          <td>RSI 14-day (QQQ)</td><td>79.1</td>
-          <td style="color:#eab308">⚠️ Outside range</td>
-        </tr>
-        <tr>
-          <td>MACD</td><td>Bullish</td>
-          <td style="color:#22c55e">✅ Above signal</td>
-        </tr>
-        <tr>
-          <td>SMH vs QQQ (20d RS)</td><td>+13.3%</td>
-          <td style="color:#22c55e">✅ Semi leading</td>
-        </tr></tbody>
-  </table>
-  <div style="margin-top:12px;padding:10px 12px;border-radius:4px;
-              background:#f8fafc;border-left:3px solid #16a34a;
-              color:#16a34a;font-size:.9em;line-height:1.5">
-    VIX 16.1 is below 20 → 🟢 BULL · Trending Up confirmed.
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">DCA<span>·</span>Monitor</div>
+  <div class="topbar-right">
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-04 21:45</div>
+    <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
+    </button>
+    <div class="topbar-date" id="clock"></div>
   </div>
 </div>
 
-<div class="card" style="border-color:#16a34a">
-  <div class="card-title">
-    Profit-Taking Monitor &nbsp;·&nbsp;
-    <span style="color:#16a34a">HOLD</span>
-    &nbsp;·&nbsp; 1/6 signals
+<!-- NAV -->
+<div class="nav">
+  <button class="ntab active" onclick="tab('dashboard',this)">Dashboard</button>
+  <button class="ntab" onclick="tab('portfolio',this)">My Portfolio</button>
+  <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
+  <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
+  <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
+</div>
+
+<div class="page">
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div class="panel active" id="panel-dashboard">
+
+  <div class="sec-title">Current Recommendation</div>
+  <div class="rec-box bull">
+    <div class="rec-eyebrow" style="color:var(--green)">Regime: BULL · 2026-06-04</div>
+    <div class="rec-headline">Deploy $10,000 this month into TQQQ + SOXL</div>
+    <div class="rec-desc">VIX at 16.3 is well below the 20 threshold. QQQ is +18.4% above its 200-day moving average and RSI at 67.4 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
+    <div class="rec-alloc">
+      <div class="rec-etf">
+        <div class="rec-etf-ticker" style="color:var(--amber)">TQQQ</div>
+        <div class="rec-etf-pct">50%</div>
+        <div class="rec-etf-amt" style="color:var(--amber)">$5,000</div>
+      </div>
+      <div class="rec-etf">
+        <div class="rec-etf-ticker" style="color:var(--red)">SOXL</div>
+        <div class="rec-etf-pct">50%</div>
+        <div class="rec-etf-amt" style="color:var(--red)">$5,000</div>
+      </div>
+      <div class="rec-etf" style="opacity:0.28;">
+        <div class="rec-etf-ticker">QQQ</div>
+        <div class="rec-etf-pct">0%</div>
+        <div class="rec-etf-amt">—</div>
+      </div>
+      <div class="rec-etf" style="opacity:0.28;">
+        <div class="rec-etf-ticker">SMH</div>
+        <div class="rec-etf-pct">0%</div>
+        <div class="rec-etf-amt">—</div>
+      </div></div>
   </div>
-  <table>
-    <thead><tr><th>Indicator</th><th>Value</th><th>Threshold</th><th>Status</th></tr></thead>
-    <tbody>
+
+  <div class="sec-title">Profit-Taking Status</div>
+  <div class="alert-banner hold">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:4px;">✅ Hold · 0 of 6 signals elevated</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:3px;">No selling — continue DCA as normal</div>
+      <div style="font-size:12px;color:var(--muted);">No action. Continue DCA as normal.</div>
+    </div>
+    <div style="text-align:center;padding-left:24px;flex-shrink:0;">
+      <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--green);line-height:1;">0/6</div>
+      <div style="font-size:10px;color:var(--muted);">signals</div>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-cell">
+      <div class="stat-label">VIX</div>
+      <div class="stat-val" style="color:var(--green)">16.3</div>
+      <div class="stat-sub">Bull zone · below 20</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">QQQ vs 200MA</div>
+      <div class="stat-val" style="color:var(--green)">+18.4%</div>
+      <div class="stat-sub">Above 200-day MA</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">RSI 14-day</div>
+      <div class="stat-val" style="color:var(--green)">67.4</div>
+      <div class="stat-sub">Healthy range</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-label">Raw signal streak</div>
+      <div class="stat-val" style="color:var(--amber)">1 month</div>
+      <div class="stat-sub">of BULL in a row</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Live Prices</div>
+  <div class="card" style="padding:0">
+    <table class="tbl">
+      <thead><tr>
+        <th>ETF</th>
+        <th class="r">Price</th>
+        <th class="r">Your cost basis</th>
+        <th class="r">Unrealized gain</th>
+        <th class="r">Shares</th>
+        <th class="r">Position value</th>
+      </tr></thead>
+      <tbody>
         <tr>
-          <td>QQQ Forward P/E</td><td>N/A×</td>
-          <td class="dim">38× / 45× / 52×</td>
-          <td style="color:#16a34a">✅ Normal</td>
+          <td><div class="t-name">QQQ</div><div class="t-sub">Nasdaq-100 · 1×</div></td>
+          <td class="r">$733.97</td>
+          <td class="r" id="d-qqq-cost">$745.00</td>
+          <td class="r" style="color:var(--red)" id="d-qqq-gain">-1.5%</td>
+          <td class="r" id="d-qqq-shares">1</td>
+          <td class="r" id="d-qqq-val">$734</td>
         </tr>
         <tr>
-          <td>RSI 14-day</td><td>79.1</td>
-          <td class="dim">78 / 83 / 88</td>
-          <td style="color:#b45309">🟡 Elevated</td>
+          <td><div class="t-name">TQQQ</div><div class="t-sub">3× Nasdaq · Leveraged</div></td>
+          <td class="r">$82.97</td>
+          <td class="r" id="d-tqqq-cost">—</td>
+          <td class="r" style="color:var(--green)" id="d-tqqq-gain">—</td>
+          <td class="r" id="d-tqqq-shares">—</td>
+          <td class="r" id="d-tqqq-val">—</td>
         </tr>
         <tr>
-          <td>Above 200MA</td><td>+20.5%</td>
-          <td class="dim">30% / 40% / 50%</td>
-          <td style="color:#16a34a">✅ Normal</td>
+          <td><div class="t-name">SMH</div><div class="t-sub">Semiconductor · 1×</div></td>
+          <td class="r">$610.03</td>
+          <td class="r" id="d-smh-cost">$628.00</td>
+          <td class="r" style="color:var(--red)" id="d-smh-gain">-2.9%</td>
+          <td class="r" id="d-smh-shares">1</td>
+          <td class="r" id="d-smh-val">$610</td>
         </tr>
         <tr>
-          <td>VIX complacency</td><td>16.1</td>
-          <td class="dim">&lt;13 / &lt;11 / &lt;10</td>
-          <td style="color:#16a34a">✅ Normal</td>
-        </tr>
-        <tr>
-          <td>12M QQQ return</td><td>+44.3%</td>
-          <td class="dim">50% / 65% / 80%</td>
-          <td style="color:#16a34a">✅ Normal</td>
-        </tr>
-        <tr>
-          <td>TQQQ gain vs cost</td><td>N/A</td>
-          <td class="dim">200% / 400% / 700%</td>
-          <td style="color:#16a34a">✅ Normal</td>
+          <td><div class="t-name">SOXL</div><div class="t-sub">3× Semiconductor · Leveraged</div></td>
+          <td class="r">$236.21</td>
+          <td class="r" id="d-soxl-cost">—</td>
+          <td class="r" style="color:var(--green)" id="d-soxl-gain">—</td>
+          <td class="r" id="d-soxl-shares">—</td>
+          <td class="r" id="d-soxl-val">—</td>
         </tr></tbody>
-  </table>
-</div>
-
-<div class="card" style="border-color:#16a34a">
-  <div class="card-title" style="color:#16a34a">
-    TODAY'S ACTION &nbsp;·&nbsp; 🟢 BULL · Trending Up
+    </table>
   </div>
-  <table>
-    <thead><tr><th>ETF</th><th>Weight</th><th>Amount</th><th>Action</th></tr></thead>
-    <tbody>
-        <tr>
-          <td class="bold">TQQQ</td>
-          <td>50%</td>
-          <td style="color:#16a34a;font-weight:bold">$5,000</td>
-          <td style="color:#16a34a">BUY</td>
-        </tr>
-        <tr>
-          <td class="bold">SOXL</td>
-          <td>50%</td>
-          <td style="color:#16a34a;font-weight:bold">$5,000</td>
-          <td style="color:#16a34a">BUY</td>
-        </tr>
-        <tr class="dim">
-          <td class="bold">QQQ</td><td>0%</td><td>—</td><td>—</td>
-        </tr>
-        <tr class="dim">
-          <td class="bold">SMH</td><td>0%</td><td>—</td><td>—</td>
-        </tr></tbody>
-  </table>
-  <div class="divider"></div>
-  <table><tbody>
-    <tr class="total-row">
-      <td>TOTAL</td><td>100%</td>
-      <td style="color:#16a34a">$10,000</td>
-      <td style="color:#16a34a">🟢 BULL · Trending Up</td>
-    </tr>
-  </tbody></table>
-  <div class="pt-action" style="color:#16a34a">
-    Profit-Taking: [HOLD] &nbsp; No action. Continue DCA as normal.
+
+  <div class="sec-title" style="margin-top:24px">Regime Indicators</div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">VIX Regime Map — which zone are we in?</div>
+    <div style="position:relative;padding-top:22px">
+      <div class="vix-marker-label" style="left:25.1%;color:var(--green)">VIX 16.3 ▼</div>
+      <div class="vix-marker" style="left:25.1%;background:var(--green)"></div>
+      <div class="regime-map-track">
+        <div class="rz" style="width:30.8%;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)">🟢 BULL · &lt;20</div>
+        <div class="rz" style="width:15.4%;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);border-left:none">🟡 CHOP · 20-30</div>
+        <div class="rz" style="width:23.1%;background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-left:none">🔴 FEAR I · 30-45</div>
+        <div class="rz" style="width:30.8%;background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border);border-left:none">🟣 FEAR II · &gt;45</div>
+      </div>
+    </div>
+    <table class="tbl" style="margin-top:14px">
+      <thead><tr><th>Regime</th><th>VIX range</th><th>What it means</th><th class="r">New DCA goes to</th><th class="r">Confirm</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--green);font-weight:700">🟢 BULL</td><td>Below 20</td><td>Trending up — leverage is fully justified</td><td class="r">TQQQ 50% + SOXL 50%</td><td class="r">$2 months</td></tr>
+        <tr><td style="color:var(--amber);font-weight:700">🟡 CHOP</td><td>20 – 30</td><td>Sideways — decay erodes 3× ETFs, hold don't sell</td><td class="r">QQQ 50% + SMH 50%</td><td class="r">$1 month</td></tr>
+        <tr><td style="color:var(--red);font-weight:700">🔴 FEAR I</td><td>30 – 45</td><td>Panic — leveraged ETFs at maximum discount</td><td class="r">TQQQ 50% + SOXL 50%</td><td class="r">$1 month</td></tr>
+        <tr><td style="color:var(--purple);font-weight:700">🟣 FEAR II</td><td>Above 45</td><td>Crash — once-per-decade entry, triple budget</td><td class="r">Your choice (see Regime Guide)</td><td class="r">Immediate</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="sig-list">
+      <div class="sig-row">
+        <div class="sig-name">VIX Level</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:25.1%;background:var(--green)"></div></div>
+        <div class="sig-val">16.3</div>
+        <div class="sig-status"><span class="badge bg">✅ Bull zone</span></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-name">QQQ vs 200-day MA</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:48.0%;background:var(--green)"></div></div>
+        <div class="sig-val">Above (+18.4%)</div>
+        <div class="sig-status"><span class="badge bg">✅ Above</span></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-name">Drawdown from 52W high</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:3.2%;background:var(--green)"></div></div>
+        <div class="sig-val">-1.6%</div>
+        <div class="sig-status"><span class="badge bg">✅ Near high</span></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-name">RSI 14-day (QQQ)</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:67.4%;background:var(--green)"></div></div>
+        <div class="sig-val">67.4</div>
+        <div class="sig-status"><span class="badge bg">✅ Healthy</span></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-name">MACD Signal</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:25%;background:var(--red)"></div></div>
+        <div class="sig-val">Bearish</div>
+        <div class="sig-status"><span class="badge br">❌ Bearish</span></div>
+      </div>
+      <div class="sig-row">
+        <div class="sig-name">SMH vs QQQ (20-day RS)</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:68.2%;background:var(--green)"></div></div>
+        <div class="sig-val">+5.5%</div>
+        <div class="sig-status"><span class="badge bg">✅ Leading</span></div>
+      </div></div>
+    <div class="reg-summary" style="border-color:var(--green);color:var(--green)">VIX 16.3 → <strong>BULL</strong> confirmed · 1 month on record.</div>
+  </div>
+
+</div>
+
+<!-- ══════════ PORTFOLIO ══════════ -->
+<div class="panel" id="panel-portfolio">
+  <div class="sec-title">My Holdings</div>
+  <div class="card" style="margin-bottom:20px">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.8;">
+      Your shares and cost basis are pre-loaded from <code>config.py</code>. You can also edit them
+      here — changes save to your browser and update position values and profit-taking signals.
+    </div>
+    <div class="portfolio-form">
+      <!-- QQQ -->
+      <div>
+        <div class="pf-label" style="color:var(--ink);margin-bottom:10px">QQQ · Nasdaq-100 · 1×</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Shares owned</div>
+            <div class="pf-input-wrap"><input class="pf-input" id="pf-qqq-shares" type="number" min="0" step="1" oninput="calcPortfolio()"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Avg cost / share</div>
+            <div class="pf-input-wrap"><div class="pf-prefix">$</div><input class="pf-input" id="pf-qqq-cost" type="number" min="0" step="0.01" oninput="calcPortfolio()"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Market value</div><div class="pf-value-col" id="pf-qqq-mval">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Unrealized gain</div><div class="pf-value-col" id="pf-qqq-ugain">—</div></div>
+        </div>
+      </div>
+      <!-- TQQQ -->
+      <div>
+        <div class="pf-label" style="color:var(--amber);margin-bottom:10px">TQQQ · 3× Nasdaq · Leveraged</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Shares owned</div>
+            <div class="pf-input-wrap"><input class="pf-input" id="pf-tqqq-shares" type="number" min="0" step="1" oninput="calcPortfolio()"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Avg cost / share</div>
+            <div class="pf-input-wrap"><div class="pf-prefix">$</div><input class="pf-input" id="pf-tqqq-cost" type="number" min="0" step="0.01" oninput="calcPortfolio()"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Market value</div><div class="pf-value-col" id="pf-tqqq-mval">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Unrealized gain</div><div class="pf-value-col" id="pf-tqqq-ugain">—</div></div>
+        </div>
+      </div>
+      <!-- SMH -->
+      <div>
+        <div class="pf-label" style="color:var(--ink);margin-bottom:10px">SMH · Semiconductor ETF · 1×</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Shares owned</div>
+            <div class="pf-input-wrap"><input class="pf-input" id="pf-smh-shares" type="number" min="0" step="1" oninput="calcPortfolio()"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Avg cost / share</div>
+            <div class="pf-input-wrap"><div class="pf-prefix">$</div><input class="pf-input" id="pf-smh-cost" type="number" min="0" step="0.01" oninput="calcPortfolio()"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Market value</div><div class="pf-value-col" id="pf-smh-mval">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Unrealized gain</div><div class="pf-value-col" id="pf-smh-ugain">—</div></div>
+        </div>
+      </div>
+      <!-- SOXL -->
+      <div>
+        <div class="pf-label" style="color:var(--red);margin-bottom:10px">SOXL · 3× Semiconductor · Leveraged</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Shares owned</div>
+            <div class="pf-input-wrap"><input class="pf-input" id="pf-soxl-shares" type="number" min="0" step="1" oninput="calcPortfolio()"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="pf-label">Avg cost / share</div>
+            <div class="pf-input-wrap"><div class="pf-prefix">$</div><input class="pf-input" id="pf-soxl-cost" type="number" min="0" step="0.01" oninput="calcPortfolio()"></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Market value</div><div class="pf-value-col" id="pf-soxl-mval">—</div></div>
+          <div style="display:flex;flex-direction:column;gap:6px"><div class="pf-label">Unrealized gain</div><div class="pf-value-col" id="pf-soxl-ugain">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="pf-total">
+      <div class="pf-total-cell"><div class="pf-total-label">Total market value</div><div class="pf-total-val" id="pf-total-val">—</div></div>
+      <div class="pf-total-cell"><div class="pf-total-label">Total cost basis</div><div class="pf-total-val" id="pf-total-cost">—</div></div>
+      <div class="pf-total-cell"><div class="pf-total-label">Total unrealized gain</div><div class="pf-total-val" id="pf-total-gain">—</div></div>
+    </div>
+    <div style="margin-top:16px;display:flex;align-items:center">
+      <button class="pf-save-btn" onclick="savePortfolio()">Save to browser</button>
+      <span class="pf-saved-notice" id="saved-notice">✓ Saved</span>
+    </div>
+  </div>
+
+  <div class="sec-title">Position Weights</div>
+  <div class="card" id="pf-weights-card">
+    <div style="font-size:12px;color:var(--muted)">Enter your holdings above to see position weights.</div>
   </div>
 </div>
 
+<!-- ══════════ REGIME GUIDE ══════════ -->
+<div class="panel" id="panel-regime">
+  <div class="sec-title">Regime System</div>
+  <div class="rtabs">
+    <button class="rtab active"  onclick="switchR('bull',this)">🟢 Bull · Trending</button>
+    <button class="rtab"  onclick="switchR('chop',this)">🟡 Chop · Sideways</button>
+    <button class="rtab" onclick="switchR('fear1',this)">🔴 Fear I · Panic</button>
+    <button class="rtab" onclick="switchR('fear2',this)">🟣 Fear II · Crash</button>
+  </div>
 
+  <!-- BULL -->
+  <div class="rpanel active" id="rp-bull">
+    <div class="rec-box bull" style="margin-bottom:16px">
+      <div class="rec-eyebrow" style="color:var(--green)">Regime 1 · Bull · VIX below 20  ·  Currently Active</div>
+      <div class="rec-headline">Market trending up — leverage is justified</div>
+      <div class="rec-desc">VIX below 20 means volatility is low and the market is trending. 3× ETFs compound fastest in this regime because trend gains exceed volatility decay. The 200MA being above price confirms the long-term direction. RSI in the 45–75 range means momentum is real but not overextended — optimal DCA entry conditions.</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Entry conditions · today's values</div>
+        <table class="tbl"><thead><tr><th>Signal</th><th class="r">Bull threshold</th><th class="r">Today</th></tr></thead>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.3 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+18.4%) ✅</td></tr><tr><td>RSI 14-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">67.4 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+5.5% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
+        
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--amber)">TQQQ</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--amber)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--amber)">$5,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--red)">SOXL</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--red)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--red)">$5,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">QQQ</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">SMH</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+        <div class="note">Switching TO Bull requires 2 consecutive months of confirmed signals. Cannot jump directly from Fear to Bull — must pass through Chop first.</div>
+      </div>
+    </div>
+  </div>
 
+  <!-- CHOP -->
+  <div class="rpanel" id="rp-chop">
+    <div class="rec-box chop" style="margin-bottom:16px">
+      <div class="rec-eyebrow" style="color:var(--amber)">Regime 2 · Chop · VIX 20–30</div>
+      <div class="rec-headline">Sideways market — stop feeding the decay machine</div>
+      <div class="rec-desc">In sideways markets, 3× ETFs lose 15–30% per year from volatility decay alone — even if the underlying index goes nowhere. Redirect new DCA to QQQ and SMH, which have zero structural drag. Existing leveraged positions are held — not sold. You retain full upside when the trend resumes. This is a pause, not a retreat.</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Chop conditions · today's values</div>
+        <table class="tbl"><thead><tr><th>Signal</th><th class="r">Chop rule</th><th class="r">Today</th></tr></thead>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">20 – 30</td><td class="r" style="color:var(--red)">16.3 ❌</td></tr><tr><td>Switch from Bull</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--muted)">1-month confirmation ·</td></tr><tr><td>Switch from Fear</td><td class="r" style="color:var(--muted)">2 months</td><td class="r" style="color:var(--muted)">2-month confirmation ·</td></tr><tr><td>New DCA</td><td class="r" style="color:var(--muted)">QQQ + SMH only</td><td class="r" style="color:var(--muted)">No new leveraged buys ·</td></tr></tbody></table>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
+        
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">TQQQ</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">SOXL</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--ink)">QQQ</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--ink)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--ink)">$5,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--ink)">SMH</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--ink)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--ink)">$5,000</div>
+      </div>
+        <div class="note">Existing TQQQ and SOXL positions: hold, do not sell. Only new DCA is redirected. Full leveraged exposure retained for when the trend resumes.</div>
+      </div>
+    </div>
+  </div>
 
-<div class="footer">
-  Regime history: 1 month on record · raw signal today: bull<br>
-  Last updated: 2026-06-02 23:21
+  <!-- FEAR I -->
+  <div class="rpanel" id="rp-fear1">
+    <div class="rec-box fear1" style="margin-bottom:16px">
+      <div class="rec-eyebrow" style="color:var(--red)">Regime 3 · Fear I · VIX 30–45</div>
+      <div class="rec-headline">Market panic — buy leveraged at maximum discount</div>
+      <div class="rec-desc">Counterintuitive but mathematically sound: SOXL and TQQQ are typically 40–70% cheaper during Fear I than at the previous bull peak. DCA here buys the most shares per dollar of the entire cycle. When the bull eventually resumes, those cheap shares produce outsized returns. The 20-year thesis hasn't changed — only the price. Confirmation: 1 month.</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Fear I conditions · today's values</div>
+        <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear I range</th><th class="r">Today</th></tr></thead>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.3 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-1.6% ❌</td></tr><tr><td>RSI 14-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">67.4 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
+        
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--amber)">TQQQ</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--amber)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--amber)">$5,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--red)">SOXL</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--red)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--red)">$5,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">QQQ</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">SMH</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+        <div class="note">Normal $10,000 budget. Contrarian — buy leveraged at deep discount. Recovery from VIX 30–45 events historically takes 6–18 months, then new highs.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEAR II -->
+  <div class="rpanel" id="rp-fear2">
+    <div class="rec-box fear2" style="margin-bottom:16px">
+      <div class="rec-eyebrow" style="color:var(--purple)">⚡ Regime 4 · Fear II · VIX above 45</div>
+      <div class="rec-headline">Once-per-decade crash — triple budget, deploy immediately</div>
+      <div class="rec-desc">VIX above 45 represents systemic market panic. COVID March 2020 peaked at VIX 82; GFC October 2008 peaked at VIX 89. These were the single best DCA entries in any 20-year plan. No confirmation needed — the window closes fast. Triple the normal budget. Choose Split A or Split B on the day based on your conviction. Your pre-funded Fear II reserve is for exactly this moment.</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Fear II conditions · today's values</div>
+        <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear II rule</th><th class="r">Today</th></tr></thead>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Above 45</td><td class="r" style="color:var(--red)">16.3 ❌</td></tr><tr><td>Budget</td><td class="r" style="color:var(--muted)">$30,000 (3×)</td><td class="r" style="color:var(--muted)">Pre-funded reserve ·</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">None — immediate</td><td class="r" style="color:var(--muted)">Deploy same day ·</td></tr></tbody></table>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Split A · Max aggression · $30,000</div>
+        
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--amber)">TQQQ</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--amber)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--amber)">$15,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--red)">SOXL</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:50%;background:var(--red)"></div></div>
+        <div class="alloc-p">50%</div>
+        <div class="alloc-d" style="color:var(--red)">$15,000</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">QQQ</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:var(--muted)">SMH</div>
+        <div class="alloc-track"></div>
+        <div class="alloc-p" style="color:var(--muted)">0%</div>
+        <div class="alloc-d" style="color:var(--muted)">—</div>
+      </div>
+        <div class="note">Split B alternative: QQQ 50% + SMH 50% at the same $30,000 budget. Use Split B if systemic collapse risk is unclear. Change FEAR2_SPLIT in config.py.</div>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- ══════════ PROFIT-TAKING ══════════ -->
+<div class="panel" id="panel-profit">
+  <div class="sec-title">Profit-Taking Monitor</div>
+
+  <div class="alert-banner hold" style="margin-bottom:20px">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:4px">✅ Hold · 0 of 6 signals elevated</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">No selling — continue DCA as normal</div>
+      <div style="font-size:12px;color:var(--muted)">No action. Continue DCA as normal.</div>
+    </div>
+    <div style="padding-left:20px;flex-shrink:0;text-align:center">
+      <div style="font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--green);line-height:1">0/6</div>
+      <div style="font-size:10px;color:var(--muted)">signals</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="sec-title" style="margin-bottom:12px">How it works</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;font-size:12px;line-height:1.9">
+      <div>
+        <div style="font-weight:700;margin-bottom:4px">Step 1 — Score each indicator (0–3)</div>
+        <span style="color:var(--green)">0 · Normal</span> — below the warning threshold<br>
+        <span style="color:var(--amber)">1 · Elevated</span> — first threshold crossed<br>
+        <span style="color:var(--red)">2 · Extreme</span> — second threshold crossed<br>
+        <span style="color:var(--purple)">3 · Bubble</span> — dot-com level, rare
+      </div>
+      <div>
+        <div style="font-weight:700;margin-bottom:4px">Step 2 — Count how many are firing (≥1)</div>
+        <span style="color:var(--green)">0–1 firing → HOLD</span> — continue DCA as normal<br>
+        <span style="color:var(--amber)">2–3 firing → WATCH</span> — pause new SOXL DCA only<br>
+        <span style="color:var(--red)">4–5 firing → CAUTION</span> — trim 15–25% of SOXL, then TQQQ<br>
+        <span style="color:var(--purple)">6 firing → EXTREME</span> — trim 40–60% of all leveraged
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:10px 14px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:4px;font-size:12px;line-height:1.8;color:var(--ink)">
+      <strong>⚠️ Confirm rule:</strong> CAUTION or EXTREME must hold for <strong>3 consecutive weeks</strong> before any selling. A single elevated reading is not enough — the market needs to sustain the signal. Sell order when action is required: <strong>SOXL first → TQQQ second → SMH only at Extreme → QQQ never.</strong>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="sec-title" style="margin-bottom:16px">6 Indicators · today's readings</div>
+    <div class="sig-list">
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">QQQ Forward P/E</div>
+          <div class="sig-desc">Nasdaq-100 valuation. Above 38× = market pricing in perfection. Dot-com peak was 54×.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:0%;background:var(--green)"></div></div>
+        <div class="sig-val">N/A</div>
+        <div class="sig-sub">38× · 45× · 52×</div>
+        <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div>
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">RSI 14-day</div>
+          <div class="sig-desc">Momentum gauge. Above 78 = overbought. Few rallies sustain RSI above 80 for more than weeks.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.7%;background:var(--green)"></div></div>
+        <div class="sig-val">67.4</div>
+        <div class="sig-sub">78 · 83 · 88</div>
+        <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div>
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">Distance above 200MA</div>
+          <div class="sig-desc">Trend extension. When QQQ runs 30%+ above its 200-day average, mean-reversion risk rises sharply.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:30.7%;background:var(--green)"></div></div>
+        <div class="sig-val">+18.4%</div>
+        <div class="sig-sub">30% · 40% · 50%</div>
+        <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div>
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">VIX Complacency (inverted)</div>
+          <div class="sig-desc">Low VIX = nobody buying protection = complacency. Inverted: the lower the VIX, the higher the warning.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:24.4%;background:var(--green)"></div></div>
+        <div class="sig-val">16.3</div>
+        <div class="sig-sub">below 13 · 11 · 10</div>
+        <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div>
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">12-month QQQ return</div>
+          <div class="sig-desc">Annual momentum. When QQQ is up 50%+ in one year, the following 12 months tend to be weaker.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.4%;background:var(--green)"></div></div>
+        <div class="sig-val">+39.9%</div>
+        <div class="sig-sub">50% · 65% · 80%</div>
+        <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div>
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">TQQQ gain vs cost basis</div>
+          <div class="sig-desc">Personal profit protection. Triggers only if you hold TQQQ and it has gained 200%+ from your cost basis in config.py.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:0%;background:var(--green)"></div></div>
+        <div class="sig-val">No cost basis set</div>
+        <div class="sig-sub">200% · 400% · 700%</div>
+        <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div></div>
+  </div>
+
+  <div class="grid3" style="margin-bottom:16px">
+    <div class="card" style="border-color:var(--amber-border);background:var(--amber-bg)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);margin-bottom:8px">🟡 Watch · 2–3 signals</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">No selling</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.8">Pause new SOXL DCA only. All other positions continue as normal. Check again next week.</div>
+    </div>
+    <div class="card" style="border-color:var(--red-border);background:var(--red-bg)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:8px">🔴 Caution · 4–5 signals</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">Trim 15–25%</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.8">Sell SOXL first, then TQQQ proportionally. Confirm 3 consecutive weeks at this level. Proceeds → Fear II reserve.</div>
+    </div>
+    <div class="card" style="border-color:var(--purple-border);background:var(--purple-bg)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);margin-bottom:8px">🟣 Extreme · 5–6 signals</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">Trim 40–60%</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.8">Major leveraged reduction. SOXL then TQQQ. SMH only at Extreme. QQQ is never sold. Dot-com level readings.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title" style="margin-bottom:12px">Indicator thresholds — elevated · extreme · bubble</div>
+    <table class="tbl">
+      <thead><tr><th>Indicator</th><th class="r">Normal</th><th class="r">🟡 Elevated</th><th class="r">🔴 Extreme</th><th class="r">🟣 Bubble</th></tr></thead>
+      <tbody>
+        <tr><td>QQQ Forward P/E</td><td class="r" style="color:var(--muted)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
+        <tr><td>RSI 14-day</td><td class="r" style="color:var(--muted)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
+        <tr><td>Distance above 200MA</td><td class="r" style="color:var(--muted)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
+        <tr><td>VIX (complacency, inverted)</td><td class="r" style="color:var(--muted)">above 13</td><td class="r">&lt;13</td><td class="r">&lt;11</td><td class="r">&lt;10</td></tr>
+        <tr><td>12-month QQQ return</td><td class="r" style="color:var(--muted)">below 50%</td><td class="r">50%+</td><td class="r">65%+</td><td class="r">80%+</td></tr>
+        <tr><td>TQQQ gain vs cost basis</td><td class="r" style="color:var(--muted)">below 200%</td><td class="r">200%+</td><td class="r">400%+</td><td class="r">700%+</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ ALLOCATIONS ══════════ -->
+<div class="panel" id="panel-allocations">
+  <div class="sec-title">Allocation Calculator</div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px">
+      <div style="flex:1;min-width:220px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Monthly Budget</div>
+        <div class="slider-wrap">
+          <input type="range" id="budgetSlider" min="1000" max="50000" step="500" value="10000" oninput="updateBudget(this.value)">
+          <div class="slider-val" id="budgetDisplay">$10,000</div>
+        </div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);max-width:260px;line-height:1.8">Fear II budget is automatically 3× this amount. Drag the slider to see dollar amounts for all 4 regimes.</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card" style="border-color:var(--green-border)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:12px">🟢 Bull · VIX &lt; 20</div>
+      <div id="bull-alloc"></div>
+      <div class="note">Confirmation: 2 consecutive months · Cannot switch directly from Fear</div>
+    </div>
+    <div class="card" style="border-color:var(--amber-border)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);margin-bottom:12px">🟡 Chop · VIX 20–30</div>
+      <div id="chop-alloc"></div>
+      <div class="note">Confirmation: 1 month from Bull · Hold existing leveraged positions</div>
+    </div>
+    <div class="card" style="border-color:var(--red-border)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:12px">🔴 Fear I · VIX 30–45</div>
+      <div id="fear1-alloc"></div>
+      <div class="note">Confirmation: 1 month · Contrarian — buy leveraged at maximum discount</div>
+    </div>
+    <div class="card" style="border-color:var(--purple-border)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);margin-bottom:12px">🟣 Fear II · VIX &gt; 45</div>
+      <div id="fear2-alloc"></div>
+      <div class="note">Confirmation: None — deploy immediately · 3× normal budget</div>
+    </div>
+  </div>
+
+  <div class="sec-title" style="margin-top:28px">Sell Order — Profit-Taking</div>
+  <div class="card">
+    <table class="tbl">
+      <thead><tr><th>#</th><th>ETF</th><th>When to sell</th><th>Why this order</th><th class="r">QQQ sold?</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--red);font-weight:700">1st</td><td><strong>SOXL</strong></td><td>Caution level (4+ signals)</td><td>Highest decay · worst max drawdown (−97%)</td><td class="r">No</td></tr>
+        <tr><td style="color:var(--amber);font-weight:700">2nd</td><td><strong>TQQQ</strong></td><td>Caution level, after SOXL</td><td>High decay · −82% historical max drawdown</td><td class="r">No</td></tr>
+        <tr><td style="color:var(--muted)">3rd</td><td>SMH</td><td>Extreme only (5–6 signals)</td><td>No decay — only at dot-com-level readings</td><td class="r">No</td></tr>
+        <tr><td style="color:var(--green);font-weight:700">Never</td><td><strong>QQQ</strong></td><td>—</td><td>No decay · lowest fee · 20-year core position</td><td class="r" style="color:var(--green)">Never</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+<div class="footer">Last updated: 2026-06-04 21:45 &nbsp;·&nbsp; 1 month of regime history on record</div>
+
+<script>
+// ── injected live data ──
+const PRICES     = {"QQQ": 733.97, "TQQQ": 82.97, "SMH": 610.03, "SOXL": 236.21};
+const CONFIG_PF  = {"qqq": {"shares": 1, "cost": 745.0}, "tqqq": {"shares": 0, "cost": 0.0}, "smh": {"shares": 1, "cost": 628.0}, "soxl": {"shares": 0, "cost": 0.0}};
+const ALLOC_W    = {"bull": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "chop": {"TQQQ": 0.0, "SOXL": 0.0, "QQQ": 0.5, "SMH": 0.5}, "fear1": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "fear2": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}};
+const ETF_COLORS = {QQQ:'var(--ink)',TQQQ:'var(--amber)',SMH:'var(--ink)',SOXL:'var(--red)'};
+
+// ── refresh ──
+function refreshPage(){
+  const btn=document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  setTimeout(()=>location.reload(true),300);
+}
+document.addEventListener('keydown',e=>{
+  if(e.key==='r'||e.key==='R'){
+    if(document.activeElement.tagName!=='INPUT')refreshPage();
+  }
+});
+
+// ── clock ──
+function updateClock(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})+
+    '  '+n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+updateClock(); setInterval(updateClock,10000);
+
+// ── nav tabs ──
+function tab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+function switchR(id,btn){
+  document.querySelectorAll('.rpanel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rtab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('rp-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── portfolio ──
+const PF_KEYS=['qqq','tqqq','smh','soxl'];
+const PF_ETF={qqq:'QQQ',tqqq:'TQQQ',smh:'SMH',soxl:'SOXL'};
+
+function fmt(n){
+  if(!isFinite(n))return'—';
+  return'$'+(Math.abs(n)>=1e3?Math.round(n).toLocaleString():n.toFixed(2));
+}
+function fmtP(n){
+  if(!isFinite(n))return'—';
+  return(n>=0?'+':'')+n.toFixed(1)+'%';
+}
+
+function loadPortfolio(){
+  const saved=JSON.parse(localStorage.getItem('dca_portfolio')||'null');
+  const src=saved||CONFIG_PF;
+  PF_KEYS.forEach(k=>{
+    document.getElementById('pf-'+k+'-shares').value=src[k]?.shares||'';
+    document.getElementById('pf-'+k+'-cost').value  =src[k]?.cost  ||'';
+  });
+  calcPortfolio();
+}
+
+function savePortfolio(){
+  const data={};
+  PF_KEYS.forEach(k=>{
+    data[k]={
+      shares:parseFloat(document.getElementById('pf-'+k+'-shares').value)||0,
+      cost:  parseFloat(document.getElementById('pf-'+k+'-cost').value)||0,
+    };
+  });
+  localStorage.setItem('dca_portfolio',JSON.stringify(data));
+  const n=document.getElementById('saved-notice');
+  n.style.display='inline';setTimeout(()=>n.style.display='none',2500);
+  calcPortfolio();
+}
+
+function calcPortfolio(){
+  let totalVal=0,totalCost=0;const weights=[];
+  PF_KEYS.forEach(k=>{
+    const etf=PF_ETF[k];
+    const shares=parseFloat(document.getElementById('pf-'+k+'-shares').value)||0;
+    const cost  =parseFloat(document.getElementById('pf-'+k+'-cost').value)||0;
+    const price =PRICES[etf];
+    const mval  =shares*price;
+    const basis =shares*cost;
+    const gain  =cost>0?((price/cost)-1)*100:NaN;
+    document.getElementById('pf-'+k+'-mval').textContent =shares>0?fmt(mval):'—';
+    const ge=document.getElementById('pf-'+k+'-ugain');
+    ge.textContent=shares>0&&cost>0?fmtP(gain):'—';
+    ge.style.color=gain>=0?'var(--green)':gain<0?'var(--red)':'inherit';
+    totalVal+=mval; totalCost+=basis;
+    if(shares>0) weights.push({etf,val:mval,color:ETF_COLORS[etf]});
+  });
+  const gPct=totalCost>0?((totalVal/totalCost)-1)*100:NaN;
+  document.getElementById('pf-total-val').textContent =totalVal>0?fmt(totalVal):'—';
+  document.getElementById('pf-total-cost').textContent=totalCost>0?fmt(totalCost):'—';
+  const tg=document.getElementById('pf-total-gain');
+  tg.textContent=totalCost>0?fmtP(gPct):'—';
+  tg.style.color=gPct>=0?'var(--green)':gPct<0?'var(--red)':'inherit';
+  const wc=document.getElementById('pf-weights-card');
+  if(totalVal>0){
+    wc.innerHTML=weights.map(w=>`
+      <div class="alloc-bar-row">
+        <div class="alloc-t" style="color:${w.color}">${w.etf}</div>
+        <div class="alloc-track"><div class="alloc-fill" style="width:${(w.val/totalVal*100).toFixed(1)}%;background:${w.color}"></div></div>
+        <div class="alloc-p">${(w.val/totalVal*100).toFixed(1)}%</div>
+        <div class="alloc-d">${fmt(w.val)}</div>
+      </div>`).join('');
+  } else {
+    wc.innerHTML='<div style="font-size:12px;color:var(--muted)">Enter your holdings above to see position weights.</div>';
+  }
+}
+
+// ── allocation calculator ──
+function renderAlloc(regime,budget,id){
+  const w=ALLOC_W[regime];
+  document.getElementById(id).innerHTML=Object.entries(w).map(([etf,wt])=>{
+    const amt=Math.round(wt*budget);
+    const c=wt>0?ETF_COLORS[etf]:'var(--muted)';
+    return`<div class="alloc-bar-row">
+      <div class="alloc-t" style="color:${c}">${etf}</div>
+      <div class="alloc-track"><div class="alloc-fill" style="width:${wt*100}%;background:${c}"></div></div>
+      <div class="alloc-p" style="color:${c}">${(wt*100).toFixed(0)}%</div>
+      <div class="alloc-d" style="color:${wt>0?'var(--ink)':'var(--muted)'};font-weight:${wt>0?700:400}">${wt>0?'$'+amt.toLocaleString():'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function updateBudget(val){
+  const b=parseInt(val);
+  document.getElementById('budgetDisplay').textContent='$'+b.toLocaleString();
+  renderAlloc('bull', b,    'bull-alloc');
+  renderAlloc('chop', b,    'chop-alloc');
+  renderAlloc('fear1',b,    'fear1-alloc');
+  renderAlloc('fear2',b*3,  'fear2-alloc');
+}
+
+// ── init ──
+loadPortfolio();
+updateBudget(10000);
+</script>
 </body>
 </html>

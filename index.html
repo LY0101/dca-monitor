@@ -161,7 +161,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
 <div class="topbar">
   <div class="topbar-logo">DCA<span>·</span>Monitor</div>
   <div class="topbar-right">
-    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-04 21:45</div>
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-04 22:02</div>
     <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
@@ -188,7 +188,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   <div class="rec-box bull">
     <div class="rec-eyebrow" style="color:var(--green)">Regime: BULL · 2026-06-04</div>
     <div class="rec-headline">Deploy $10,000 this month into TQQQ + SOXL</div>
-    <div class="rec-desc">VIX at 16.3 is well below the 20 threshold. QQQ is +18.4% above its 200-day moving average and RSI at 67.4 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
+    <div class="rec-desc">VIX at 16.1 is well below the 20 threshold. QQQ is +18.5% above its 200-day moving average and RSI at 66.9 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
     <div class="rec-alloc">
       <div class="rec-etf">
         <div class="rec-etf-ticker" style="color:var(--amber)">TQQQ</div>
@@ -228,17 +228,17 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   <div class="stat-row">
     <div class="stat-cell">
       <div class="stat-label">VIX</div>
-      <div class="stat-val" style="color:var(--green)">16.3</div>
+      <div class="stat-val" style="color:var(--green)">16.1</div>
       <div class="stat-sub">Bull zone · below 20</div>
     </div>
     <div class="stat-cell">
       <div class="stat-label">QQQ vs 200MA</div>
-      <div class="stat-val" style="color:var(--green)">+18.4%</div>
+      <div class="stat-val" style="color:var(--green)">+18.5%</div>
       <div class="stat-sub">Above 200-day MA</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-label">RSI 14-day</div>
-      <div class="stat-val" style="color:var(--green)">67.4</div>
+      <div class="stat-label">RSI 35-day</div>
+      <div class="stat-val" style="color:var(--green)">66.9</div>
       <div class="stat-sub">Healthy range</div>
     </div>
     <div class="stat-cell">
@@ -262,15 +262,15 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <tbody>
         <tr>
           <td><div class="t-name">QQQ</div><div class="t-sub">Nasdaq-100 · 1×</div></td>
-          <td class="r">$733.97</td>
+          <td class="r">$734.96</td>
           <td class="r" id="d-qqq-cost">$745.00</td>
-          <td class="r" style="color:var(--red)" id="d-qqq-gain">-1.5%</td>
+          <td class="r" style="color:var(--red)" id="d-qqq-gain">-1.3%</td>
           <td class="r" id="d-qqq-shares">1</td>
-          <td class="r" id="d-qqq-val">$734</td>
+          <td class="r" id="d-qqq-val">$735</td>
         </tr>
         <tr>
           <td><div class="t-name">TQQQ</div><div class="t-sub">3× Nasdaq · Leveraged</div></td>
-          <td class="r">$82.97</td>
+          <td class="r">$83.29</td>
           <td class="r" id="d-tqqq-cost">—</td>
           <td class="r" style="color:var(--green)" id="d-tqqq-gain">—</td>
           <td class="r" id="d-tqqq-shares">—</td>
@@ -278,7 +278,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
         </tr>
         <tr>
           <td><div class="t-name">SMH</div><div class="t-sub">Semiconductor · 1×</div></td>
-          <td class="r">$610.03</td>
+          <td class="r">$609.51</td>
           <td class="r" id="d-smh-cost">$628.00</td>
           <td class="r" style="color:var(--red)" id="d-smh-gain">-2.9%</td>
           <td class="r" id="d-smh-shares">1</td>
@@ -286,7 +286,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
         </tr>
         <tr>
           <td><div class="t-name">SOXL</div><div class="t-sub">3× Semiconductor · Leveraged</div></td>
-          <td class="r">$236.21</td>
+          <td class="r">$236.59</td>
           <td class="r" id="d-soxl-cost">—</td>
           <td class="r" style="color:var(--green)" id="d-soxl-gain">—</td>
           <td class="r" id="d-soxl-shares">—</td>
@@ -299,8 +299,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
   <div class="card" style="margin-bottom:14px">
     <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">VIX Regime Map — which zone are we in?</div>
     <div style="position:relative;padding-top:22px">
-      <div class="vix-marker-label" style="left:25.1%;color:var(--green)">VIX 16.3 ▼</div>
-      <div class="vix-marker" style="left:25.1%;background:var(--green)"></div>
+      <div class="vix-marker-label" style="left:24.8%;color:var(--green)">VIX 16.1 ▼</div>
+      <div class="vix-marker" style="left:24.8%;background:var(--green)"></div>
       <div class="regime-map-track">
         <div class="rz" style="width:30.8%;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)">🟢 BULL · &lt;20</div>
         <div class="rz" style="width:15.4%;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);border-left:none">🟡 CHOP · 20-30</div>
@@ -322,26 +322,26 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
     <div class="sig-list">
       <div class="sig-row">
         <div class="sig-name">VIX Level</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:25.1%;background:var(--green)"></div></div>
-        <div class="sig-val">16.3</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:24.8%;background:var(--green)"></div></div>
+        <div class="sig-val">16.1</div>
         <div class="sig-status"><span class="badge bg">✅ Bull zone</span></div>
       </div>
       <div class="sig-row">
         <div class="sig-name">QQQ vs 200-day MA</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:48.0%;background:var(--green)"></div></div>
-        <div class="sig-val">Above (+18.4%)</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:48.1%;background:var(--green)"></div></div>
+        <div class="sig-val">Above (+18.5%)</div>
         <div class="sig-status"><span class="badge bg">✅ Above</span></div>
       </div>
       <div class="sig-row">
         <div class="sig-name">Drawdown from 52W high</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:3.2%;background:var(--green)"></div></div>
-        <div class="sig-val">-1.6%</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:3.0%;background:var(--green)"></div></div>
+        <div class="sig-val">-1.5%</div>
         <div class="sig-status"><span class="badge bg">✅ Near high</span></div>
       </div>
       <div class="sig-row">
-        <div class="sig-name">RSI 14-day (QQQ)</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:67.4%;background:var(--green)"></div></div>
-        <div class="sig-val">67.4</div>
+        <div class="sig-name">RSI 35-day (QQQ)</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:66.9%;background:var(--green)"></div></div>
+        <div class="sig-val">66.9</div>
         <div class="sig-status"><span class="badge bg">✅ Healthy</span></div>
       </div>
       <div class="sig-row">
@@ -352,11 +352,11 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       </div>
       <div class="sig-row">
         <div class="sig-name">SMH vs QQQ (20-day RS)</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:68.2%;background:var(--green)"></div></div>
-        <div class="sig-val">+5.5%</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:67.5%;background:var(--green)"></div></div>
+        <div class="sig-val">+5.2%</div>
         <div class="sig-status"><span class="badge bg">✅ Leading</span></div>
       </div></div>
-    <div class="reg-summary" style="border-color:var(--green);color:var(--green)">VIX 16.3 → <strong>BULL</strong> confirmed · 1 month on record.</div>
+    <div class="reg-summary" style="border-color:var(--green);color:var(--green)">VIX 16.1 → <strong>BULL</strong> confirmed · 1 month on record.</div>
   </div>
 
 </div>
@@ -481,7 +481,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Entry conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Bull threshold</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.3 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+18.4%) ✅</td></tr><tr><td>RSI 14-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">67.4 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+5.5% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.1 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+18.5%) ✅</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">66.9 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+5.2% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -526,7 +526,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Chop conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Chop rule</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">20 – 30</td><td class="r" style="color:var(--red)">16.3 ❌</td></tr><tr><td>Switch from Bull</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--muted)">1-month confirmation ·</td></tr><tr><td>Switch from Fear</td><td class="r" style="color:var(--muted)">2 months</td><td class="r" style="color:var(--muted)">2-month confirmation ·</td></tr><tr><td>New DCA</td><td class="r" style="color:var(--muted)">QQQ + SMH only</td><td class="r" style="color:var(--muted)">No new leveraged buys ·</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">20 – 30</td><td class="r" style="color:var(--red)">16.1 ❌</td></tr><tr><td>Switch from Bull</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--muted)">1-month confirmation ·</td></tr><tr><td>Switch from Fear</td><td class="r" style="color:var(--muted)">2 months</td><td class="r" style="color:var(--muted)">2-month confirmation ·</td></tr><tr><td>New DCA</td><td class="r" style="color:var(--muted)">QQQ + SMH only</td><td class="r" style="color:var(--muted)">No new leveraged buys ·</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -571,7 +571,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Fear I conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear I range</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.3 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-1.6% ❌</td></tr><tr><td>RSI 14-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">67.4 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.1 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-1.5% ❌</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">66.9 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -616,7 +616,7 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Fear II conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear II rule</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Above 45</td><td class="r" style="color:var(--red)">16.3 ❌</td></tr><tr><td>Budget</td><td class="r" style="color:var(--muted)">$30,000 (3×)</td><td class="r" style="color:var(--muted)">Pre-funded reserve ·</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">None — immediate</td><td class="r" style="color:var(--muted)">Deploy same day ·</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Above 45</td><td class="r" style="color:var(--red)">16.1 ❌</td></tr><tr><td>Budget</td><td class="r" style="color:var(--muted)">$30,000 (3×)</td><td class="r" style="color:var(--muted)">Pre-funded reserve ·</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">None — immediate</td><td class="r" style="color:var(--muted)">Deploy same day ·</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Split A · Max aggression · $30,000</div>
@@ -695,58 +695,58 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
     <div class="sig-list">
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
-          <div class="sig-name">QQQ Forward P/E</div>
-          <div class="sig-desc">Nasdaq-100 valuation. Above 38× = market pricing in perfection. Dot-com peak was 54×.</div>
+          <div class="sig-name">QQQ P/E (trailing)</div>
+          <div class="sig-desc">QQQ's trailing 12-month price-to-earnings ratio, sourced from Yahoo Finance. Reflects the weighted P/E of all 100 Nasdaq-100 holdings. Elevated readings mean the market is priced for perfection — any earnings miss hits hard. Dot-com peak (2000): 54×. Note: thresholds were calibrated for forward P/E; use this as a directional signal.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:0%;background:var(--green)"></div></div>
-        <div class="sig-val">N/A</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:46.4%;background:var(--green)"></div></div>
+        <div class="sig-val">35.9×</div>
         <div class="sig-sub">38× · 45× · 52×</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
-          <div class="sig-name">RSI 14-day</div>
-          <div class="sig-desc">Momentum gauge. Above 78 = overbought. Few rallies sustain RSI above 80 for more than weeks.</div>
+          <div class="sig-name">RSI 35-day (QQQ)</div>
+          <div class="sig-desc">QQQ's Relative Strength Index calculated on 35 trading days of daily closing prices. RSI measures how fast and how much QQQ has risen vs fallen recently, on a 0–100 scale. A 35-day window is deliberately slower than the standard 14-day — it filters out short-term noise and better suits monthly DCA decisions. Above 78: QQQ has been gaining unusually fast for an extended period — momentum is likely stretched.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.7%;background:var(--green)"></div></div>
-        <div class="sig-val">67.4</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:44.8%;background:var(--green)"></div></div>
+        <div class="sig-val">66.9</div>
         <div class="sig-sub">78 · 83 · 88</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
-          <div class="sig-name">Distance above 200MA</div>
-          <div class="sig-desc">Trend extension. When QQQ runs 30%+ above its 200-day average, mean-reversion risk rises sharply.</div>
+          <div class="sig-name">Distance above 200-day MA</div>
+          <div class="sig-desc">How far QQQ's current price sits above its 200-day simple moving average of daily closes. The 200MA is the most-watched long-term trend line. When QQQ runs 30%+ above it, the market is historically extended — sharp pullbacks become more likely even without a trend reversal. Historically, readings above 40% have preceded corrections of 15–25%.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:30.7%;background:var(--green)"></div></div>
-        <div class="sig-val">+18.4%</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:30.8%;background:var(--green)"></div></div>
+        <div class="sig-val">+18.5%</div>
         <div class="sig-sub">30% · 40% · 50%</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
-          <div class="sig-name">VIX Complacency (inverted)</div>
-          <div class="sig-desc">Low VIX = nobody buying protection = complacency. Inverted: the lower the VIX, the higher the warning.</div>
+          <div class="sig-name">VIX Complacency (inverted signal)</div>
+          <div class="sig-desc">The CBOE VIX measures the market's expected 30-day S&P 500 volatility, derived from options prices. This indicator is INVERTED — a lower VIX is more dangerous here. When VIX drops below 13, traders are paying almost nothing for downside protection, signalling extreme complacency. Historically, VIX below 10–12 has preceded significant corrections. Normal bull market VIX range: 13–20.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:24.4%;background:var(--green)"></div></div>
-        <div class="sig-val">16.3</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:25.7%;background:var(--green)"></div></div>
+        <div class="sig-val">16.1</div>
         <div class="sig-sub">below 13 · 11 · 10</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
           <div class="sig-name">12-month QQQ return</div>
-          <div class="sig-desc">Annual momentum. When QQQ is up 50%+ in one year, the following 12 months tend to be weaker.</div>
+          <div class="sig-desc">QQQ's total price return over the past 252 trading days (~1 calendar year), using daily closes. A 50%+ one-year gain puts QQQ in historically stretched territory — forward returns over the following 12 months are significantly below average when this fires. This is not a timing signal — it measures whether recent gains have been unusually large and whether a cooling-off period is statistically overdue.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.4%;background:var(--green)"></div></div>
-        <div class="sig-val">+39.9%</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:45.5%;background:var(--green)"></div></div>
+        <div class="sig-val">+40.1%</div>
         <div class="sig-sub">50% · 65% · 80%</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
-          <div class="sig-name">TQQQ gain vs cost basis</div>
-          <div class="sig-desc">Personal profit protection. Triggers only if you hold TQQQ and it has gained 200%+ from your cost basis in config.py.</div>
+          <div class="sig-name">TQQQ gain vs your cost basis</div>
+          <div class="sig-desc">Your personal unrealized gain on TQQQ: (current price ÷ your avg cost basis − 1). Set your cost basis in config.py — this signal does nothing until you do. When TQQQ has tripled from your purchase price (+200%), trimming a portion locks in real gains before a mean-reversion can erase them. This is the only indicator personal to your portfolio — the other 5 are market-wide signals.</div>
         </div>
         <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:0%;background:var(--green)"></div></div>
         <div class="sig-val">No cost basis set</div>
@@ -778,8 +778,8 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
     <table class="tbl">
       <thead><tr><th>Indicator</th><th class="r">Normal</th><th class="r">🟡 Elevated</th><th class="r">🔴 Extreme</th><th class="r">🟣 Bubble</th></tr></thead>
       <tbody>
-        <tr><td>QQQ Forward P/E</td><td class="r" style="color:var(--muted)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
-        <tr><td>RSI 14-day</td><td class="r" style="color:var(--muted)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
+        <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--muted)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
+        <tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
         <tr><td>Distance above 200MA</td><td class="r" style="color:var(--muted)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
         <tr><td>VIX (complacency, inverted)</td><td class="r" style="color:var(--muted)">above 13</td><td class="r">&lt;13</td><td class="r">&lt;11</td><td class="r">&lt;10</td></tr>
         <tr><td>12-month QQQ return</td><td class="r" style="color:var(--muted)">below 50%</td><td class="r">50%+</td><td class="r">65%+</td><td class="r">80%+</td></tr>
@@ -845,11 +845,11 @@ body{font-family:'IBM Plex Mono',monospace;background:var(--bg);color:var(--ink)
 
 </div><!-- /page -->
 
-<div class="footer">Last updated: 2026-06-04 21:45 &nbsp;·&nbsp; 1 month of regime history on record</div>
+<div class="footer">Last updated: 2026-06-04 22:02 &nbsp;·&nbsp; 1 month of regime history on record</div>
 
 <script>
 // ── injected live data ──
-const PRICES     = {"QQQ": 733.97, "TQQQ": 82.97, "SMH": 610.03, "SOXL": 236.21};
+const PRICES     = {"QQQ": 734.96, "TQQQ": 83.29, "SMH": 609.51, "SOXL": 236.59};
 const CONFIG_PF  = {"qqq": {"shares": 1, "cost": 745.0}, "tqqq": {"shares": 0, "cost": 0.0}, "smh": {"shares": 1, "cost": 628.0}, "soxl": {"shares": 0, "cost": 0.0}};
 const ALLOC_W    = {"bull": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "chop": {"TQQQ": 0.0, "SOXL": 0.0, "QQQ": 0.5, "SMH": 0.5}, "fear1": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "fear2": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}};
 const ETF_COLORS = {QQQ:'var(--ink)',TQQQ:'var(--amber)',SMH:'var(--ink)',SOXL:'var(--red)'};

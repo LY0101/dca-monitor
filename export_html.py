@@ -154,6 +154,8 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
 
     rc   = REGIME_COLOR[regime]
     rcls = regime
+    rlabel = {"bull":"🟢 BULL · Trending Up","chop":"🟡 CHOP · Sideways",
+               "fear1":"🔴 FEAR I · Panic Buying","fear2":"🟣 FEAR II · Crash"}[regime]
     ac   = ALERT_COLOR[pt["alert_level"]]
     acls = ALERT_CLASS[pt["alert_level"]]
     fire = pt["firing"]
@@ -945,6 +947,18 @@ body{{
 <div class="panel" id="panel-profit">
   <div class="sec-title">Profit-Taking Monitor</div>
 
+  <!-- Current regime indicator -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;padding:14px 18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-xs)">
+    <div style="width:12px;height:12px;border-radius:50%;background:{rc};box-shadow:0 0 0 3px {rc}33;flex-shrink:0"></div>
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Current Regime</div>
+      <div style="font-size:14px;font-weight:700;color:{rc}">{rlabel}</div>
+    </div>
+    <div style="margin-left:auto;font-size:11px;color:var(--muted);text-align:right">
+      VIX {vix:.1f} · {n_hist} month{'s' if n_hist!=1 else ''} of history
+    </div>
+  </div>
+
   <div class="alert-banner {acls}" style="margin-bottom:20px">
     <div>
       <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{ac};margin-bottom:4px">{pt_eyebrow}</div>
@@ -1006,14 +1020,31 @@ body{{
   <div class="card">
     <div class="sec-title" style="margin-bottom:12px">Indicator thresholds — elevated · extreme · bubble</div>
     <table class="tbl">
-      <thead><tr><th>Indicator</th><th class="r">Normal</th><th class="r">🟡 Elevated</th><th class="r">🔴 Extreme</th><th class="r">🟣 Bubble</th></tr></thead>
+      <thead><tr>
+        <th>Indicator</th>
+        <th class="r" style="color:var(--green)">✅ Normal</th>
+        <th class="r" style="color:var(--amber)">🟡 Elevated</th>
+        <th class="r" style="color:var(--red)">🔴 Extreme</th>
+        <th class="r" style="color:var(--purple)">🟣 Bubble</th>
+      </tr></thead>
       <tbody>
-        <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--muted)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
-        <tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
-        <tr><td>Distance above 200MA</td><td class="r" style="color:var(--muted)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
-        <tr><td>VIX (complacency, inverted)</td><td class="r" style="color:var(--muted)">above 13</td><td class="r">&lt;13</td><td class="r">&lt;11</td><td class="r">&lt;10</td></tr>
-        <tr><td>12-month QQQ return</td><td class="r" style="color:var(--muted)">below 50%</td><td class="r">50%+</td><td class="r">65%+</td><td class="r">80%+</td></tr>
-        <tr><td>TQQQ gain vs cost basis</td><td class="r" style="color:var(--muted)">below 200%</td><td class="r">200%+</td><td class="r">400%+</td><td class="r">700%+</td></tr>
+        <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--green)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
+        <tr><td>RSI 35-day (QQQ daily closes)</td><td class="r" style="color:var(--green)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
+        <tr><td>Distance above 200MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
+        <tr>
+          <td>
+            VIX complacency
+            <div style="font-size:10px;color:var(--amber);margin-top:2px;font-weight:500">
+              ⚠️ Inverted — unusually LOW VIX is the warning. Low VIX = nobody buying protection = complacency.
+            </div>
+          </td>
+          <td class="r" style="color:var(--green)">VIX ≥ 13<br><span style="font-size:10px;color:var(--muted)">(calm, normal)</span></td>
+          <td class="r">VIX &lt; 13<br><span style="font-size:10px;color:var(--muted)">(complacent)</span></td>
+          <td class="r">VIX &lt; 11<br><span style="font-size:10px;color:var(--muted)">(very complacent)</span></td>
+          <td class="r">VIX &lt; 10<br><span style="font-size:10px;color:var(--muted)">(extreme)</span></td>
+        </tr>
+        <tr><td>12-month QQQ return</td><td class="r" style="color:var(--green)">below 50%</td><td class="r">50%+</td><td class="r">65%+</td><td class="r">80%+</td></tr>
+        <tr><td>TQQQ gain vs your cost basis</td><td class="r" style="color:var(--green)">below 200%</td><td class="r">200%+</td><td class="r">400%+</td><td class="r">700%+</td></tr>
       </tbody>
     </table>
   </div>

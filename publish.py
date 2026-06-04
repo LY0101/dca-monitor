@@ -32,11 +32,13 @@ def main():
         cmd.append("--save")
     run(cmd)
 
-    # 2. Stage index.html (and history.csv if --save)
-    files = ["index.html"]
+    # 2. Stage all changed files
+    src = ["index.html", "main.py", "config.py", "data.py",
+           "export_html.py", "profit_taking.py", "regime.py",
+           "backtest.py", "publish.py", "requirements.txt"]
     if args.save:
-        files.append("history.csv")
-    run(["git", "add"] + files)
+        src.append("history.csv")
+    run(["git", "add"] + src)
 
     # 3. Check if there's anything to commit
     status = run(["git", "status", "--porcelain"], check=False)

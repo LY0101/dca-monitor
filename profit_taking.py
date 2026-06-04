@@ -47,7 +47,7 @@ def evaluate(data: dict) -> dict:
     """
     scores = {
         "qqq_pe_fwd":      _score("qqq_pe_fwd",      data.get("qqq_pe_fwd")),
-        "rsi_14":          _score("rsi_14",           data["rsi"]),
+        "rsi_35":          _score("rsi_35",           data["rsi"]),
         "above_200ma_pct": _score("above_200ma_pct",  data["above_200ma_pct"]),
         "vix_low":         _score("vix_low",          data["vix"],  inverted=True),
         "return_12m_pct":  _score("return_12m_pct",   data["return_12m_pct"]),

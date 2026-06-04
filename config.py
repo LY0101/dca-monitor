@@ -5,17 +5,17 @@ FEAR2_BUDGET   = 30_000   # USD, VIX > 45 only
 
 # Your average cost per share — update after each purchase
 COST_BASIS = {
-    "QQQ":  0.00,   # ← enter your avg cost
+    "QQQ":  745.00,
     "TQQQ": 0.00,
-    "SMH":  0.00,
+    "SMH":  628.00,
     "SOXL": 0.00,
 }
 
 # Your shares owned — update after each purchase
 HOLDINGS = {
-    "QQQ":  0,
+    "QQQ":  1,
     "TQQQ": 0,
-    "SMH":  0,
+    "SMH":  1,
     "SOXL": 0,
 }
 
@@ -61,7 +61,7 @@ CONFIRM = {
 
 PROFIT_THRESHOLDS = {
     "qqq_pe_fwd":      (38,  45,  52),   # Nasdaq-100 forward P/E
-    "rsi_14":          (78,  83,  88),   # QQQ 14-day RSI
+    "rsi_35":          (78,  83,  88),   # QQQ 35-day RSI
     "above_200ma_pct": (30,  40,  50),   # % QQQ above 200-day SMA
     "vix_low":         (13,  11,  10),   # inverted: LOW VIX = complacency
     "return_12m_pct":  (50,  65,  80),   # QQQ 12-month return %

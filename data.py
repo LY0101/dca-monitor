@@ -1,3 +1,4 @@
+import re
 import yfinance as yf
 import pandas_ta as ta
 import requests
@@ -46,7 +47,7 @@ def fetch_all() -> dict:
     above_200ma  = qqq_price > sma200
     above_200pct = (qqq_price - sma200) / sma200 * 100
 
-    rsi = float(ta.rsi(qqq, length=14).iloc[-1])
+    rsi = float(ta.rsi(qqq, length=35).iloc[-1])
 
     macd_df     = ta.macd(qqq, fast=12, slow=26, signal=9)
     macd_bull   = (float(macd_df["MACD_12_26_9"].iloc[-1]) >
@@ -87,18 +88,93 @@ def fetch_all() -> dict:
     }
 
 
+_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+}
+
+
+def _valid_pe(v) -> bool:
+    """Sanity-check a P/E value (must be a positive number between 10 and 500)."""
+    try:
+        return 10 < float(v) < 500
+    except (TypeError, ValueError):
+        return False
+
+
 def _fetch_pe() -> float | None:
-    """Scrape Nasdaq-100 forward P/E from multpl.com."""
+    """
+    Fetch QQQ / Nasdaq-100 P/E ratio from multiple sources in priority order.
+
+    1. yfinance  — forwardPE then trailingPE from Yahoo Finance (same data
+                   provider we already use, zero extra dependencies)
+    2. multpl.com — Nasdaq trailing P/E page with robust selector fallback
+    3. macrotrends — embedded JSON in the page script tags
+    """
+
+    # ── Source 1: yfinance ────────────────────────────────────────────────
+    try:
+        info = yf.Ticker("QQQ").info
+        for key in ("forwardPE", "trailingPE"):
+            v = info.get(key)
+            if _valid_pe(v):
+                return round(float(v), 1)
+    except Exception:
+        pass
+
+    # ── Source 2: multpl.com ──────────────────────────────────────────────
     try:
         r = requests.get(
             "https://www.multpl.com/nasdaq-pe-ratio",
-            timeout=8,
-            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=10,
+            headers=_HEADERS,
         )
         soup = BeautifulSoup(r.text, "html.parser")
-        el = soup.find("div", {"id": "current"})
-        if el:
-            return float(el.text.strip().replace(",", ""))
+        # Try several selectors — site structure changes occasionally
+        for tag, attrs in [
+            ("div",  {"id": "current"}),
+            ("span", {"id": "current"}),
+            ("div",  {"id": "current-value"}),
+            ("div",  {"class": "current"}),
+        ]:
+            el = soup.find(tag, attrs)
+            if el:
+                text = re.sub(r"[^\d.]", "", el.get_text().strip().split()[0])
+                if text and _valid_pe(text):
+                    return round(float(text), 1)
     except Exception:
         pass
-    return None   # will show as "manual input needed" in report
+
+    # ── Source 3: macrotrends ─────────────────────────────────────────────
+    try:
+        r = requests.get(
+            "https://www.macrotrends.net/stocks/charts/QQQ/"
+            "invesco-qqq-trust-series-1/pe-ratio",
+            timeout=10,
+            headers=_HEADERS,
+        )
+        # Current value is embedded in a <div class="current-value"> or
+        # as the first entry in the data table
+        soup = BeautifulSoup(r.text, "html.parser")
+        el = soup.find("div", {"class": "current-value"})
+        if el:
+            text = re.sub(r"[^\d.]", "", el.get_text().strip())
+            if text and _valid_pe(text):
+                return round(float(text), 1)
+        # Fallback: first data row in the table
+        rows = soup.select("table.historical_data_table tr")
+        for row in rows[1:3]:          # skip header, try first two rows
+            cells = row.find_all("td")
+            if len(cells) >= 2:
+                text = re.sub(r"[^\d.]", "", cells[1].get_text().strip())
+                if text and _valid_pe(text):
+                    return round(float(text), 1)
+    except Exception:
+        pass
+
+    return None   # will show as "N/A" in report — enter manually if needed

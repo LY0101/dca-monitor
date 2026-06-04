@@ -113,7 +113,7 @@ def section_regime_indicators(d: dict) -> Panel:
          ("✅ Near high", "green") if d["drawdown_pct"] > -10
          else ("⚠️  In drawdown", "yellow")),
 
-        ("RSI 14-day (QQQ)",
+        ("RSI 35-day (QQQ)",
          f"{d['rsi']:.1f}",
          ("✅ Healthy", "green") if 45 <= d["rsi"] <= 75
          else ("⚠️  Outside range", "yellow")),
@@ -148,7 +148,7 @@ def section_profit_taking(d: dict, pt: dict) -> Panel:
 
     labels = {
         "qqq_pe_fwd":      ("QQQ Forward P/E",       f"{d.get('qqq_pe_fwd') or 'N/A'}×", "38× / 45× / 52×"),
-        "rsi_14":          ("RSI 14-day",             f"{d['rsi']:.1f}",                   "78 / 83 / 88"),
+        "rsi_35":          ("RSI 35-day",             f"{d['rsi']:.1f}",                   "78 / 83 / 88"),
         "above_200ma_pct": ("Above 200MA",            pct(d["above_200ma_pct"]),            "30% / 40% / 50%"),
         "vix_low":         ("VIX complacency",        f"{d['vix']:.1f}",                   "<13 / <11 / <10"),
         "return_12m_pct":  ("12M QQQ return",         pct(d["return_12m_pct"]),             "50% / 65% / 80%"),

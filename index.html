@@ -257,7 +257,7 @@ body{
 <div class="topbar">
   <div class="topbar-logo">DCA<span>·</span>Monitor</div>
   <div class="topbar-right">
-    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-05 22:16</div>
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-05 22:17</div>
     <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
@@ -295,7 +295,7 @@ body{
   <div class="rec-box bull">
     <div class="rec-eyebrow" style="color:var(--green)">Regime: BULL · 2026-06-05</div>
     <div class="rec-headline">Deploy $10,000 this month into TQQQ + SOXL</div>
-    <div class="rec-desc">VIX at 16.8 is well below the 20 threshold. QQQ is +17.0% above its 200-day moving average and RSI at 64.2 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
+    <div class="rec-desc">VIX at 16.8 is well below the 20 threshold. QQQ is +17.0% above its 200-day moving average and RSI at 64.1 is in the healthy 45–75 range. Leverage is fully justified — trending markets offset volatility decay costs. This is the core DCA environment the framework is built for.</div>
     <div class="rec-alloc">
       <div class="rec-etf">
         <div class="rec-etf-ticker" style="color:var(--amber)">TQQQ</div>
@@ -345,7 +345,7 @@ body{
     </div>
     <div class="stat-cell">
       <div class="stat-label">RSI 35-day</div>
-      <div class="stat-val" style="color:var(--green)">64.2</div>
+      <div class="stat-val" style="color:var(--green)">64.1</div>
       <div class="stat-sub">Healthy range</div>
     </div>
     <div class="stat-cell">
@@ -369,15 +369,15 @@ body{
       <tbody>
         <tr>
           <td><div class="t-name">QQQ</div><div class="t-sub">Nasdaq-100 · 1×</div></td>
-          <td class="r">$726.72</td>
+          <td class="r">$726.36</td>
           <td class="r" id="d-qqq-cost">$745.00</td>
           <td class="r" style="color:var(--red)" id="d-qqq-gain">-2.5%</td>
           <td class="r" id="d-qqq-shares">1</td>
-          <td class="r" id="d-qqq-val">$727</td>
+          <td class="r" id="d-qqq-val">$726</td>
         </tr>
         <tr>
           <td><div class="t-name">TQQQ</div><div class="t-sub">3× Nasdaq · Leveraged</div></td>
-          <td class="r">$80.42</td>
+          <td class="r">$80.26</td>
           <td class="r" id="d-tqqq-cost">—</td>
           <td class="r" style="color:var(--green)" id="d-tqqq-gain">—</td>
           <td class="r" id="d-tqqq-shares">—</td>
@@ -385,15 +385,15 @@ body{
         </tr>
         <tr>
           <td><div class="t-name">SMH</div><div class="t-sub">Semiconductor · 1×</div></td>
-          <td class="r">$600.00</td>
+          <td class="r">$599.07</td>
           <td class="r" id="d-smh-cost">$628.00</td>
-          <td class="r" style="color:var(--red)" id="d-smh-gain">-4.5%</td>
+          <td class="r" style="color:var(--red)" id="d-smh-gain">-4.6%</td>
           <td class="r" id="d-smh-shares">1</td>
-          <td class="r" id="d-smh-val">$600</td>
+          <td class="r" id="d-smh-val">$599</td>
         </tr>
         <tr>
           <td><div class="t-name">SOXL</div><div class="t-sub">3× Semiconductor · Leveraged</div></td>
-          <td class="r">$225.50</td>
+          <td class="r">$224.21</td>
           <td class="r" id="d-soxl-cost">—</td>
           <td class="r" style="color:var(--green)" id="d-soxl-gain">—</td>
           <td class="r" id="d-soxl-shares">—</td>
@@ -406,8 +406,8 @@ body{
   <div class="card" style="margin-bottom:14px">
     <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">VIX Regime Map — which zone are we in?</div>
     <div style="position:relative;padding-top:22px">
-      <div class="vix-marker-label" style="left:25.9%;color:var(--green)">VIX 16.8 ▼</div>
-      <div class="vix-marker" style="left:25.9%;background:var(--green)"></div>
+      <div class="vix-marker-label" style="left:25.8%;color:var(--green)">VIX 16.8 ▼</div>
+      <div class="vix-marker" style="left:25.8%;background:var(--green)"></div>
       <div class="regime-map-track">
         <div class="rz" style="width:30.8%;background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)">🟢 BULL · &lt;20</div>
         <div class="rz" style="width:15.4%;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);border-left:none">🟡 CHOP · 20-30</div>
@@ -445,10 +445,10 @@ body{
           <span style="color:var(--muted)">QQQ +17.0% above 200MA (>25.0%)</span>
         </div><div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0"></div>
-          <span style="color:var(--muted)">RSI 64.2 > 72.0</span>
+          <span style="color:var(--muted)">RSI 64.1 > 72.0</span>
         </div><div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0"></div>
-          <span style="color:var(--muted)">12M return +38.1% > 45.0%</span>
+          <span style="color:var(--muted)">12M return +38.0% > 45.0%</span>
         </div>
       </div>
     </div>
@@ -457,7 +457,7 @@ body{
     <div class="sig-list">
       <div class="sig-row">
         <div class="sig-name">VIX Level</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:25.9%;background:var(--green)"></div></div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:25.8%;background:var(--green)"></div></div>
         <div class="sig-val">16.8</div>
         <div class="sig-status"><span class="badge bg">✅ Bull zone</span></div>
       </div>
@@ -469,14 +469,14 @@ body{
       </div>
       <div class="sig-row">
         <div class="sig-name">Drawdown from 52W high</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:5.2%;background:var(--green)"></div></div>
-        <div class="sig-val">-2.6%</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:5.4%;background:var(--green)"></div></div>
+        <div class="sig-val">-2.7%</div>
         <div class="sig-status"><span class="badge bg">✅ Near high</span></div>
       </div>
       <div class="sig-row">
         <div class="sig-name">RSI 35-day (QQQ)</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:64.2%;background:var(--green)"></div></div>
-        <div class="sig-val">64.2</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:64.1%;background:var(--green)"></div></div>
+        <div class="sig-val">64.1</div>
         <div class="sig-status"><span class="badge bg">✅ Healthy</span></div>
       </div>
       <div class="sig-row">
@@ -487,8 +487,8 @@ body{
       </div>
       <div class="sig-row">
         <div class="sig-name">SMH vs QQQ (20-day RS)</div>
-        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:71.7%;background:var(--green)"></div></div>
-        <div class="sig-val">+6.5%</div>
+        <div class="sig-bar-track"><div class="sig-bar-fill" style="width:71.3%;background:var(--green)"></div></div>
+        <div class="sig-val">+6.4%</div>
         <div class="sig-status"><span class="badge bg">✅ Leading</span></div>
       </div></div>
     <div class="reg-summary" style="border-color:var(--green);color:var(--green)">VIX 16.8 → <strong>BULL</strong> confirmed · 1 month on record.</div>
@@ -620,8 +620,8 @@ body{
         <tbody>
           <tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 15.0</td><td class="r" style="color:var(--red)">16.8 ❌</td></tr>
           <tr><td>QQQ above 200MA</td><td class="r" style="color:var(--muted)">Above +25.0%</td><td class="r" style="color:var(--red)">+17.0% ❌</td></tr>
-          <tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Above 72.0</td><td class="r" style="color:var(--red)">64.2 ❌</td></tr>
-          <tr><td>12M QQQ return</td><td class="r" style="color:var(--muted)">Above +45.0%</td><td class="r" style="color:var(--red)">+38.1% ❌</td></tr>
+          <tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Above 72.0</td><td class="r" style="color:var(--red)">64.1 ❌</td></tr>
+          <tr><td>12M QQQ return</td><td class="r" style="color:var(--muted)">Above +45.0%</td><td class="r" style="color:var(--red)">+38.0% ❌</td></tr>
           <tr><td>Signals firing</td><td class="r" style="color:var(--muted)">3+ of 4</td><td class="r" style="color:var(--red)">0/4 ❌</td></tr>
           <tr><td>Confirmation</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr>
         </tbody></table>
@@ -656,7 +656,7 @@ body{
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Entry conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Bull threshold</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.8 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+17.0%) ✅</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">64.2 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+6.5% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--green)">16.8 ✅</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+17.0%) ✅</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">64.1 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+6.4% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">1 month ❌</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -746,7 +746,7 @@ body{
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Fear I conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear I range</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.8 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-2.6% ❌</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">64.2 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">16.8 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-2.7% ❌</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">64.1 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--green)">1 month ✅</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -895,8 +895,8 @@ body{
           <div class="sig-name">RSI 35-day (QQQ)</div>
           <div class="sig-desc">QQQ's Relative Strength Index calculated on 35 trading days of daily closing prices. RSI measures how fast and how much QQQ has risen vs fallen recently, on a 0–100 scale. A 35-day window is deliberately slower than the standard 14-day — it filters out short-term noise and better suits monthly DCA decisions. Above 78: QQQ has been gaining unusually fast for an extended period — momentum is likely stretched.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:40.3%;background:var(--green)"></div></div>
-        <div class="sig-val">64.2</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:40.2%;background:var(--green)"></div></div>
+        <div class="sig-val">64.1</div>
         <div class="sig-sub">78 · 83 · 88</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -915,7 +915,7 @@ body{
           <div class="sig-name">VIX Complacency (inverted signal)</div>
           <div class="sig-desc">The CBOE VIX measures the market's expected 30-day S&P 500 volatility, derived from options prices. This indicator is INVERTED — a lower VIX is more dangerous here. When VIX drops below 13, traders are paying almost nothing for downside protection, signalling extreme complacency. Historically, VIX below 10–12 has preceded significant corrections. Normal bull market VIX range: 13–20.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:21.2%;background:var(--green)"></div></div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:21.4%;background:var(--green)"></div></div>
         <div class="sig-val">16.8</div>
         <div class="sig-sub">below 13 · 11 · 10</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
@@ -925,8 +925,8 @@ body{
           <div class="sig-name">12-month QQQ return</div>
           <div class="sig-desc">QQQ's total price return over the past 252 trading days (~1 calendar year), using daily closes. A 50%+ one-year gain puts QQQ in historically stretched territory — forward returns over the following 12 months are significantly below average when this fires. This is not a timing signal — it measures whether recent gains have been unusually large and whether a cooling-off period is statistically overdue.</div>
         </div>
-        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:43.7%;background:var(--green)"></div></div>
-        <div class="sig-val">+38.1%</div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:43.6%;background:var(--green)"></div></div>
+        <div class="sig-val">+38.0%</div>
         <div class="sig-sub">50% · 65% · 80%</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
       </div>
@@ -1049,11 +1049,11 @@ body{
 
 </div><!-- /page -->
 
-<div class="footer">Last updated: 2026-06-05 22:16 &nbsp;·&nbsp; 1 month of regime history on record</div>
+<div class="footer">Last updated: 2026-06-05 22:17 &nbsp;·&nbsp; 1 month of regime history on record</div>
 
 <script>
 // ── injected live data ──
-const PRICES     = {"QQQ": 726.72, "TQQQ": 80.42, "SMH": 600.0, "SOXL": 225.5};
+const PRICES     = {"QQQ": 726.36, "TQQQ": 80.26, "SMH": 599.07, "SOXL": 224.21};
 const CONFIG_PF  = {"qqq": {"shares": 1, "cost": 745.0}, "tqqq": {"shares": 0, "cost": 0.0}, "smh": {"shares": 1, "cost": 628.0}, "soxl": {"shares": 0, "cost": 0.0}};
 const ALLOC_W    = {"bull": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "chop": {"TQQQ": 0.0, "SOXL": 0.0, "QQQ": 0.5, "SMH": 0.5}, "fear1": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}, "fear2": {"TQQQ": 0.5, "SOXL": 0.5, "QQQ": 0.0, "SMH": 0.0}};
 const ETF_COLORS = {QQQ:'var(--ink)',TQQQ:'var(--amber)',SMH:'var(--ink)',SOXL:'var(--red)'};

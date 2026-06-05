@@ -1,19 +1,37 @@
 import csv, os
 from datetime import date
-from config import VIX_THRESHOLDS, CONFIRM, ALLOCATIONS, MONTHLY_BUDGET, FEAR2_BUDGET, FEAR2_SPLIT, HISTORY_FILE
+from config import (VIX_THRESHOLDS, CONFIRM, ALLOCATIONS, MONTHLY_BUDGET,
+                    FEAR2_BUDGET, FEAR2_SPLIT, HISTORY_FILE,
+                    EUPHORIA_THRESHOLDS, EUPHORIA_SIGNALS_REQUIRED)
+
+
+def _euphoria_signals(data: dict) -> int:
+    """Count how many of the 4 euphoria signals are currently firing."""
+    t = EUPHORIA_THRESHOLDS
+    return sum([
+        data["vix"]             < t["vix_max"],
+        data["above_200ma_pct"] > t["above_200ma_min"],
+        data["rsi"]             > t["rsi_min"],
+        data["return_12m_pct"]  > t["ret_12m_min"],
+    ])
 
 
 def classify_raw(data: dict) -> str:
     """
-    VIX is the hard boundary. Returns raw signal for this moment.
-    Hysteresis is applied separately in decide_regime().
+    Returns raw regime signal for this moment.
+    VIX is the hard boundary for fear/chop.
+    In the bull VIX zone, euphoria is checked as a multi-signal overlay.
     """
     v = data["vix"]
     t = VIX_THRESHOLDS
     if   v > t["fear1_max"]: return "fear2"
     elif v > t["chop_max"]:  return "fear1"
     elif v > t["bull_max"]:  return "chop"
-    else:                     return "bull"
+    else:
+        # Bull VIX zone — check for euphoria overlay
+        if _euphoria_signals(data) >= EUPHORIA_SIGNALS_REQUIRED:
+            return "euphoria"
+        return "bull"
 
 
 def load_history() -> list[str]:
@@ -28,12 +46,15 @@ def decide_regime(raw: str, history: list[str]) -> str:
     """
     Apply hysteresis rules.
 
+    Spectrum (coolest → hottest):
+      fear2 → fear1 → chop → bull → euphoria
+
     Rules:
-      fear2 → immediate (0 months)
-      fear1 → 1 month confirmation
-      chop  → 1 month from bull, 2 months from fear
-      bull  → 2 months confirmation, cannot come directly from fear
-      fear  → bull is BLOCKED (must pass through chop first)
+      fear2    → immediate (0 months)
+      fear1    → 1 month confirmation
+      chop     → 1 month from bull/euphoria; 2 months from fear
+      bull     → 2 months; cannot come directly from fear
+      euphoria → 2 months from bull; drops back to bull in 1 month
     """
     if not history:
         return "chop"   # safe default on first run
@@ -44,29 +65,37 @@ def decide_regime(raw: str, history: list[str]) -> str:
     if raw == "fear2":
         return "fear2"
 
-    # Fear I: hold for 1 month
+    # Fear I: 1 month confirmation
     if raw == "fear1":
         return "fear1" if prev in ("fear1", "fear2") else prev
 
-    # Chop: 1 month from bull; 2 months from fear
+    # Chop: fast from bull/euphoria; 2 months from fear
     if raw == "chop":
         if prev in ("fear1", "fear2"):
-            # need 1 confirmed month already in chop or fear before switching
             if len(history) >= 2 and history[-2] in ("fear1", "fear2", "chop"):
                 return "chop"
             return prev
-        return "chop"   # fast switch from bull
+        return "chop"   # fast switch from bull or euphoria
 
-    # Bull: 2 months; cannot jump from fear
+    # Bull: 2 months; cannot jump from fear; can drop from euphoria in 1 month
     if raw == "bull":
         if prev in ("fear1", "fear2"):
-            return "chop"   # block direct fear → bull
-        if prev == "bull":
-            return "bull"   # already there
-        # need previous month also bull
-        if len(history) >= 2 and history[-2] == "bull":
+            return "chop"           # block fear → bull
+        if prev in ("bull", "euphoria"):
+            return "bull"           # natural or cooling from euphoria
+        if len(history) >= 2 and history[-2] in ("bull", "euphoria"):
             return "bull"
-        return "chop"       # only 1 month — keep waiting
+        return "chop"
+
+    # Euphoria: 2 months from bull; only reachable from bull/euphoria
+    if raw == "euphoria":
+        if prev == "euphoria":
+            return "euphoria"       # already confirmed
+        if prev == "bull":
+            # Need the month before also to have been bull or euphoria
+            if len(history) >= 2 and history[-2] in ("bull", "euphoria"):
+                return "euphoria"
+        return "bull"               # not enough confirmation yet
 
     return "chop"
 
@@ -74,8 +103,12 @@ def decide_regime(raw: str, history: list[str]) -> str:
 def get_allocation(regime: str) -> tuple[dict, int]:
     """
     Returns ({ETF: dollar_amount}, total_budget).
-    Fear II uses 3× budget and the configured split.
+    Euphoria: $0 deploy — no new DCA.
+    Fear II:  3× budget with configured split.
     """
+    if regime == "euphoria":
+        alloc  = {etf: 0 for etf in ALLOCATIONS["euphoria"]}
+        return alloc, 0
     if regime == "fear2":
         key    = f"fear2_{FEAR2_SPLIT}"
         budget = FEAR2_BUDGET
@@ -85,6 +118,11 @@ def get_allocation(regime: str) -> tuple[dict, int]:
 
     alloc = {etf: round(w * budget, 2) for etf, w in ALLOCATIONS[key].items()}
     return alloc, budget
+
+
+def euphoria_signal_count(data: dict) -> int:
+    """Expose signal count for display purposes."""
+    return _euphoria_signals(data)
 
 
 def save_month(data: dict, raw: str, regime: str, alloc: dict) -> None:

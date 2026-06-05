@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
-from config import COST_BASIS, HOLDINGS, MONTHLY_BUDGET, FEAR2_BUDGET, ALLOCATIONS, CONFIRM
+from config import (COST_BASIS, HOLDINGS, MONTHLY_BUDGET, FEAR2_BUDGET,
+                    ALLOCATIONS, CONFIRM, EUPHORIA_THRESHOLDS, EUPHORIA_SIGNALS_REQUIRED)
 
 # ── helpers ──────────────────────────────────────────────────
 
@@ -19,7 +20,7 @@ SCORE_BADGE = [
     "<span class='badge bp'>🟣 Bubble</span>",
 ]
 SCORE_COLOR  = ["var(--green)", "var(--amber)", "var(--red)", "var(--purple)"]
-REGIME_COLOR = {"bull":"var(--green)","chop":"var(--amber)","fear1":"var(--red)","fear2":"var(--purple)"}
+REGIME_COLOR = {"euphoria":"var(--orange)","bull":"var(--green)","chop":"var(--amber)","fear1":"var(--red)","fear2":"var(--purple)"}
 ALERT_CLASS  = {"HOLD":"hold","WATCH":"watch","CAUTION":"caution","EXTREME":"extreme"}
 ALERT_COLOR  = {"HOLD":"var(--green)","WATCH":"var(--amber)","CAUTION":"var(--red)","EXTREME":"var(--purple)"}
 ETF_COLOR    = {"TQQQ":"var(--amber)","SOXL":"var(--red)","QQQ":"var(--ink)","SMH":"var(--ink)"}
@@ -37,6 +38,8 @@ def _cond(signal, threshold, today_val, met, neutral=False):
 
 
 def _headline(regime, budget, raw):
+    if regime == "euphoria":
+        return "Stop new DCA — market is overheated. Let existing positions run and monitor for profit-taking signals."
     if regime == "bull":
         return f"Deploy ${budget:,} this month into TQQQ + SOXL"
     if regime == "chop" and raw == "bull":
@@ -52,6 +55,14 @@ def _headline(regime, budget, raw):
 
 def _desc(d, regime, raw, n):
     vix = d["vix"]
+    if regime == "euphoria":
+        t = EUPHORIA_THRESHOLDS
+        return (f"Multiple overheating signals are firing simultaneously. "
+                f"VIX at {vix:.1f} signals extreme complacency, QQQ is {d['above_200ma_pct']:+.1f}% above its 200-day MA, "
+                f"RSI at {d['rsi']:.1f}, and the 12-month return is {d['return_12m_pct']:+.1f}%. "
+                f"Deploying new capital at these levels means buying at or near the peak with maximum leverage risk. "
+                f"Hold existing positions and use the Profit-Taking monitor to guide any trimming. "
+                f"When euphoria ends and signals normalize, the framework resumes Bull DCA automatically.")
     if regime == "bull":
         return (f"VIX at {vix:.1f} is well below the 20 threshold. QQQ is "
                 f"{d['above_200ma_pct']:+.1f}% above its 200-day moving average and RSI at "
@@ -154,8 +165,28 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
 
     rc   = REGIME_COLOR[regime]
     rcls = regime
-    rlabel = {"bull":"🟢 BULL · Trending Up","chop":"🟡 CHOP · Sideways",
-               "fear1":"🔴 FEAR I · Panic Buying","fear2":"🟣 FEAR II · Crash"}[regime]
+    rlabel = {
+        "euphoria": "🟠 EUPHORIA · Overheated",
+        "bull":  "🟢 BULL · Trending Up",
+        "chop":  "🟡 CHOP · Sideways",
+        "fear1": "🔴 FEAR I · Panic Buying",
+        "fear2": "🟣 FEAR II · Crash",
+    }[regime]
+
+    # Euphoria signal count (always compute for display)
+    et = EUPHORIA_THRESHOLDS
+    euph_signals = sum([
+        vix             < et["vix_max"],
+        abv_pct         > et["above_200ma_min"],
+        rsi             > et["rsi_min"],
+        ret12m          > et["ret_12m_min"],
+    ])
+    euph_details = [
+        (f"VIX {vix:.1f} < {et['vix_max']}",                vix             < et["vix_max"]),
+        (f"QQQ {_p(abv_pct)} above 200MA (>{et['above_200ma_min']}%)", abv_pct > et["above_200ma_min"]),
+        (f"RSI {rsi:.1f} > {et['rsi_min']}",                rsi             > et["rsi_min"]),
+        (f"12M return {_p(ret12m)} > {et['ret_12m_min']}%", ret12m          > et["ret_12m_min"]),
+    ]
     ac   = ALERT_COLOR[pt["alert_level"]]
     acls = ALERT_CLASS[pt["alert_level"]]
     fire = pt["firing"]
@@ -386,6 +417,7 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
   --amber:#d97706; --amber-bg:#fffbeb; --amber-border:#fcd34d;
   --red:#dc2626;   --red-bg:#fff1f2;   --red-border:#fca5a5;
   --purple:#7c3aed;--purple-bg:#f5f3ff;--purple-border:#c4b5fd;
+  --orange:#ea580c;--orange-bg:#fff7ed;--orange-border:#fed7aa;
   --shadow-xs:0 1px 2px rgba(0,0,0,.04);
   --shadow-sm:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
   --shadow:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -2px rgba(0,0,0,.04);
@@ -468,9 +500,10 @@ body{{
 
 /* ── RECOMMENDATION BOX ── */
 .rec-box{{border-radius:var(--radius);border:1.5px solid;padding:22px 24px;margin-bottom:22px}}
-.rec-box.bull {{border-color:var(--green-border);background:var(--green-bg)}}
-.rec-box.chop {{border-color:var(--amber-border);background:var(--amber-bg)}}
-.rec-box.fear1{{border-color:var(--red-border);  background:var(--red-bg)}}
+.rec-box.euphoria{{border-color:var(--orange-border);background:var(--orange-bg)}}
+.rec-box.bull {{border-color:var(--green-border); background:var(--green-bg)}}
+.rec-box.chop {{border-color:var(--amber-border); background:var(--amber-bg)}}
+.rec-box.fear1{{border-color:var(--red-border);   background:var(--red-bg)}}
 .rec-box.fear2{{border-color:var(--purple-border);background:var(--purple-bg)}}
 .rec-eyebrow{{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;font-family:'IBM Plex Mono',monospace}}
 .rec-headline{{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;line-height:1.2;margin-bottom:10px}}
@@ -488,10 +521,11 @@ body{{
 
 /* ── ALERT BANNER ── */
 .alert-banner{{border-radius:var(--radius);border:1.5px solid;padding:18px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}}
-.alert-banner.hold   {{border-color:var(--green-border);background:var(--green-bg)}}
-.alert-banner.watch  {{border-color:var(--amber-border);background:var(--amber-bg)}}
-.alert-banner.caution{{border-color:var(--red-border);  background:var(--red-bg)}}
-.alert-banner.extreme{{border-color:var(--purple-border);background:var(--purple-bg)}}
+.alert-banner.hold    {{border-color:var(--green-border); background:var(--green-bg)}}
+.alert-banner.watch   {{border-color:var(--amber-border); background:var(--amber-bg)}}
+.alert-banner.caution {{border-color:var(--red-border);   background:var(--red-bg)}}
+.alert-banner.extreme {{border-color:var(--purple-border);background:var(--purple-bg)}}
+.alert-banner.euphoria{{border-color:var(--orange-border);background:var(--orange-bg)}}
 
 /* ── STAT ROW ── */
 .stat-row{{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}}
@@ -733,14 +767,33 @@ body{{
       </div>
     </div>
     <table class="tbl" style="margin-top:14px">
-      <thead><tr><th>Regime</th><th>VIX range</th><th>What it means</th><th class="r">New DCA goes to</th><th class="r">Confirm</th></tr></thead>
+      <thead><tr><th>Regime</th><th>Trigger</th><th>What it means</th><th class="r">New DCA</th><th class="r">Confirm</th></tr></thead>
       <tbody>
-        <tr><td style="color:var(--green);font-weight:700">🟢 BULL</td><td>Below 20</td><td>Trending up — leverage is fully justified</td><td class="r">TQQQ 50% + SOXL 50%</td><td class="r">${CONFIRM["to_bull"]} months</td></tr>
-        <tr><td style="color:var(--amber);font-weight:700">🟡 CHOP</td><td>20 – 30</td><td>Sideways — decay erodes 3× ETFs, hold don't sell</td><td class="r">QQQ 50% + SMH 50%</td><td class="r">${CONFIRM["to_chop"]} month</td></tr>
-        <tr><td style="color:var(--red);font-weight:700">🔴 FEAR I</td><td>30 – 45</td><td>Panic — leveraged ETFs at maximum discount</td><td class="r">TQQQ 50% + SOXL 50%</td><td class="r">${CONFIRM["to_fear1"]} month</td></tr>
-        <tr><td style="color:var(--purple);font-weight:700">🟣 FEAR II</td><td>Above 45</td><td>Crash — once-per-decade entry, triple budget</td><td class="r">Your choice (see Regime Guide)</td><td class="r">Immediate</td></tr>
+        <tr><td style="color:var(--orange);font-weight:700">🟠 EUPHORIA</td><td>Multi-signal (3 of 4)</td><td>Overheated — stop buying, monitor for profit-taking</td><td class="r" style="color:var(--orange)">$0 — pause DCA</td><td class="r">{CONFIRM["to_euphoria"]} months</td></tr>
+        <tr><td style="color:var(--green);font-weight:700">🟢 BULL</td><td>VIX &lt; 20</td><td>Trending up — leverage is fully justified</td><td class="r">TQQQ 50% + SOXL 50%</td><td class="r">{CONFIRM["to_bull"]} months</td></tr>
+        <tr><td style="color:var(--amber);font-weight:700">🟡 CHOP</td><td>VIX 20–30</td><td>Sideways — decay erodes 3× ETFs, hold don't sell</td><td class="r">QQQ 50% + SMH 50%</td><td class="r">{CONFIRM["to_chop"]} month</td></tr>
+        <tr><td style="color:var(--red);font-weight:700">🔴 FEAR I</td><td>VIX 30–45</td><td>Panic — leveraged ETFs at maximum discount</td><td class="r">TQQQ 50% + SOXL 50%</td><td class="r">{CONFIRM["to_fear1"]} month</td></tr>
+        <tr><td style="color:var(--purple);font-weight:700">🟣 FEAR II</td><td>VIX &gt; 45</td><td>Crash — once-per-decade entry, triple budget</td><td class="r">Your choice (see Regime Guide)</td><td class="r">Immediate</td></tr>
       </tbody>
     </table>
+
+    <!-- Euphoria multi-signal tracker -->
+    <div style="margin-top:14px;padding:14px 16px;border-radius:8px;border:1.5px solid {'var(--orange-border)' if regime=='euphoria' else 'var(--border)'};background:{'var(--orange-bg)' if regime=='euphoria' else 'var(--s1)'}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{'var(--orange)' if regime=='euphoria' else 'var(--muted)'}">
+          🟠 Euphoria Multi-Signal Tracker — {euph_signals}/{EUPHORIA_SIGNALS_REQUIRED} required to trigger
+        </div>
+        <div style="font-size:11px;font-weight:700;color:{'var(--orange)' if euph_signals>=EUPHORIA_SIGNALS_REQUIRED else 'var(--muted)'}">
+          {'⚡ ACTIVE' if euph_signals>=EUPHORIA_SIGNALS_REQUIRED else f'{euph_signals}/4 signals'}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        {''.join(f"""<div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
+          <div style="width:8px;height:8px;border-radius:50%;background:{'var(--orange)' if ok else 'var(--border2)'};flex-shrink:0"></div>
+          <span style="color:{'var(--ink)' if ok else 'var(--muted)'}">{label}</span>
+        </div>""" for label, ok in euph_details)}
+      </div>
+    </div>
   </div>
   <div class="card">
     <div class="sig-list">{regime_sigs}</div>
@@ -852,10 +905,50 @@ body{{
 <div class="panel" id="panel-regime">
   <div class="sec-title">Regime System</div>
   <div class="rtabs">
-    <button class="rtab{ra('bull')}"  onclick="switchR('bull',this)">🟢 Bull · Trending</button>
-    <button class="rtab{ra('chop')}"  onclick="switchR('chop',this)">🟡 Chop · Sideways</button>
-    <button class="rtab{ra('fear1')}" onclick="switchR('fear1',this)">🔴 Fear I · Panic</button>
-    <button class="rtab{ra('fear2')}" onclick="switchR('fear2',this)">🟣 Fear II · Crash</button>
+    <button class="rtab{ra('euphoria')}" onclick="switchR('euphoria',this)">🟠 Euphoria · Overheated</button>
+    <button class="rtab{ra('bull')}"     onclick="switchR('bull',this)">🟢 Bull · Trending</button>
+    <button class="rtab{ra('chop')}"     onclick="switchR('chop',this)">🟡 Chop · Sideways</button>
+    <button class="rtab{ra('fear1')}"    onclick="switchR('fear1',this)">🔴 Fear I · Panic</button>
+    <button class="rtab{ra('fear2')}"    onclick="switchR('fear2',this)">🟣 Fear II · Crash</button>
+  </div>
+
+  <!-- EUPHORIA -->
+  <div class="rpanel{ra('euphoria')}" id="rp-euphoria">
+    <div class="rec-box euphoria" style="margin-bottom:16px">
+      <div class="rec-eyebrow" style="color:var(--orange)">🟠 Euphoria · Multi-signal · 3 of 4 required{'  ·  Currently Active' if regime=='euphoria' else ''}</div>
+      <div class="rec-headline">Market overheated — stop new DCA, protect your gains</div>
+      <div class="rec-desc">Multiple signals are firing simultaneously that historically appear near market peaks. This is not a prediction of a crash — markets can stay euphoric for months. But deploying new capital with full leverage at these levels means buying near the top with maximum downside exposure. The right move: pause new DCA, hold existing positions, and use the Profit-Taking monitor to decide whether to trim.</div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Euphoria conditions · today's values</div>
+        <table class="tbl"><thead><tr><th>Signal</th><th class="r">Threshold (need 3 of 4)</th><th class="r">Today</th></tr></thead>
+        <tbody>
+          {_cond("VIX", f"Below {EUPHORIA_THRESHOLDS['vix_max']}", f"{vix:.1f}", vix < EUPHORIA_THRESHOLDS["vix_max"])}
+          {_cond("QQQ above 200MA", f"Above +{EUPHORIA_THRESHOLDS['above_200ma_min']}%", _p(abv_pct), abv_pct > EUPHORIA_THRESHOLDS["above_200ma_min"])}
+          {_cond("RSI 35-day", f"Above {EUPHORIA_THRESHOLDS['rsi_min']}", f"{rsi:.1f}", rsi > EUPHORIA_THRESHOLDS["rsi_min"])}
+          {_cond("12M QQQ return", f"Above +{EUPHORIA_THRESHOLDS['ret_12m_min']}%", _p(ret12m), ret12m > EUPHORIA_THRESHOLDS["ret_12m_min"])}
+          {_cond("Signals firing", f"{EUPHORIA_SIGNALS_REQUIRED}+ of 4", f"{euph_signals}/4", euph_signals >= EUPHORIA_SIGNALS_REQUIRED)}
+          {_cond("Confirmation", f"{CONFIRM['to_euphoria']} consecutive months", f"{consec} month{'s' if consec!=1 else ''}", consec >= CONFIRM["to_euphoria"] and regime == "euphoria")}
+        </tbody></table>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:12px">Action in Euphoria</div>
+        <div style="font-size:13px;line-height:1.9">
+          <div style="padding:12px;background:var(--orange-bg);border:1px solid var(--orange-border);border-radius:8px;margin-bottom:12px;color:var(--orange);font-weight:600">
+            💰 New DCA this month: $0 — pause completely
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8">
+            ✅ <strong>Hold</strong> all existing TQQQ, SOXL, QQQ, SMH positions<br>
+            📊 <strong>Monitor</strong> the Profit-Taking tab weekly<br>
+            ✂️ <strong>Trim</strong> only if Profit-Taking reaches CAUTION (4+ signals)<br>
+            🔄 <strong>Resume</strong> DCA when euphoria signals drop below {EUPHORIA_SIGNALS_REQUIRED} of 4<br><br>
+            <span style="color:var(--ink)">Euphoria reverts to Bull after 1 month of normalized signals.</span>
+          </div>
+        </div>
+        <div class="note">Cannot jump from Euphoria to Fear without passing through Bull → Chop first. Euphoria requires 2 confirmed months before activating.</div>
+      </div>
+    </div>
   </div>
 
   <!-- BULL -->

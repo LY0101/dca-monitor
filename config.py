@@ -19,15 +19,17 @@ HOLDINGS = {
     "SOXL": 0,
 }
 
-# ── ALLOCATIONS — 50/50 across all regimes ───────────────────
+# ── ALLOCATIONS ──────────────────────────────────────────────
 #
-#  Bull:   TQQQ 50% + SOXL 50%   (leveraged, trending up)
-#  Chop:   QQQ  50% + SMH  50%   (unleveraged, sideways)
-#  Fear I: TQQQ 50% + SOXL 50%   (leveraged, buy the panic)
+#  Euphoria: $0 deploy — stop new DCA, let profit-taking guide trimming
+#  Bull:     TQQQ 50% + SOXL 50%   (leveraged, trending up)
+#  Chop:     QQQ  50% + SMH  50%   (unleveraged, sideways)
+#  Fear I:   TQQQ 50% + SOXL 50%   (leveraged, buy the panic)
 #  Fear II Split A: TQQQ 50% + SOXL 50%  (max aggression, $30K)
 #  Fear II Split B: QQQ  50% + SMH  50%  (balanced, $30K)
 
 ALLOCATIONS = {
+    "euphoria":   {"TQQQ": 0.00, "SOXL": 0.00, "QQQ": 0.00, "SMH": 0.00},
     "bull":       {"TQQQ": 0.50, "SOXL": 0.50, "QQQ": 0.00, "SMH": 0.00},
     "chop":       {"TQQQ": 0.00, "SOXL": 0.00, "QQQ": 0.50, "SMH": 0.50},
     "fear1":      {"TQQQ": 0.50, "SOXL": 0.50, "QQQ": 0.00, "SMH": 0.00},
@@ -51,11 +53,22 @@ VIX_THRESHOLDS = {
 # ── HYSTERESIS — confirmation months required ─────────────────
 
 CONFIRM = {
-    "to_fear2": 0,   # immediate — window closes fast
-    "to_fear1": 1,
-    "to_chop":  1,
-    "to_bull":  2,   # slowest — prevents FOMO re-entry
+    "to_fear2":    0,   # immediate — window closes fast
+    "to_fear1":    1,
+    "to_chop":     1,
+    "to_bull":     2,   # prevents FOMO re-entry
+    "to_euphoria": 2,   # 2 months of signals before declaring overheated
 }
+
+# ── EUPHORIA THRESHOLDS — multi-signal, need 3 of 4 ──────────
+
+EUPHORIA_THRESHOLDS = {
+    "vix_max":         15.0,  # VIX below this (extreme complacency)
+    "above_200ma_min": 25.0,  # QQQ this % above 200-day MA
+    "rsi_min":         72.0,  # RSI 35-day above this
+    "ret_12m_min":     45.0,  # 12-month QQQ return above this
+}
+EUPHORIA_SIGNALS_REQUIRED = 3   # of the 4 above
 
 # ── PROFIT-TAKING THRESHOLDS — (elevated, extreme, bubble) ───
 

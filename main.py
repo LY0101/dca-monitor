@@ -21,7 +21,7 @@ from rich         import box
 
 from config import MONTHLY_BUDGET, FEAR2_BUDGET, COST_BASIS, HOLDINGS
 import data as data_module
-from regime       import classify_raw, load_history, decide_regime, get_allocation, save_month
+from regime       import classify_raw, load_history, decide_regime, get_allocation, save_month, euphoria_signal_count
 from profit_taking import evaluate
 
 console = Console()
@@ -29,10 +29,12 @@ console = Console()
 # ── colour helpers ────────────────────────────────────────────
 
 REGIME_COLOR = {
+    "euphoria": "bright_red",
     "bull":  "green", "chop": "yellow",
     "fear1": "red",   "fear2": "magenta",
 }
 REGIME_LABEL = {
+    "euphoria": "🟠 EUPHORIA · Overheated",
     "bull":  "🟢 BULL · Trending Up",
     "chop":  "🟡 CHOP · Sideways",
     "fear1": "🔴 FEAR I · Panic Buying",

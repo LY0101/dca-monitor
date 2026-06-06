@@ -253,10 +253,10 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
         ret12m          > et["ret_12m_min"],
     ])
     euph_details = [
-        (f"VIX {vix:.1f} < {et['vix_max']}",                vix             < et["vix_max"]),
-        (f"QQQ {_p(abv_pct)} above 200MA (>{et['above_200ma_min']}%)", abv_pct > et["above_200ma_min"]),
-        (f"RSI {rsi:.1f} > {et['rsi_min']}",                rsi             > et["rsi_min"]),
-        (f"12M return {_p(ret12m)} > {et['ret_12m_min']}%", ret12m          > et["ret_12m_min"]),
+        (f"VIX {vix:.1f} &lt; {et['vix_max']}",                vix             < et["vix_max"]),
+        (f"QQQ {_p(abv_pct)} above its 200-day MA (&gt;{et['above_200ma_min']}%)", abv_pct > et["above_200ma_min"]),
+        (f"QQQ RSI-35 {rsi:.1f} &gt; {et['rsi_min']}",        rsi             > et["rsi_min"]),
+        (f"QQQ 12-month return {_p(ret12m)} &gt; {et['ret_12m_min']}%", ret12m  > et["ret_12m_min"]),
     ]
     ac   = ALERT_COLOR[pt["alert_level"]]
     acls = ALERT_CLASS[pt["alert_level"]]
@@ -339,9 +339,9 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     regime_sigs = (
         _sig_row("VIX Level",              _bar(vix,0,65),        vix_bc,              f"{vix:.1f}",  vix_bx, vix_bt) +
         _sig_row("QQQ vs 200-day MA",      _bar(abv_pct,-20,60),  "var(--green)"if above else"var(--red)",   ma_val,       "bg"if above else"br", "✅ Above"if above else"❌ Below") +
-        _sig_row("Drawdown from 52W high", _bar(abs(dd),0,50),    "var(--green)"if dd>-10 else"var(--amber)", _p(dd),       "bg"if dd>-10 else"ba", "✅ Near high"if dd>-10 else"⚠️ In drawdown") +
-        _sig_row("RSI 35-day (QQQ)",       rsi,                   "var(--green)"if 45<=rsi<=75 else"var(--amber)", f"{rsi:.1f}", "bg"if 45<=rsi<=75 else"ba", "✅ Healthy"if 45<=rsi<=75 else"⚠️ Out of range") +
-        _sig_row("MACD Signal",            75 if macd_b else 25,  "var(--green)"if macd_b else"var(--red)",  "Bullish"if macd_b else"Bearish", "bg"if macd_b else"br", "✅ Bullish"if macd_b else"❌ Bearish") +
+        _sig_row("QQQ drawdown from 52W high", _bar(abs(dd),0,50),    "var(--green)"if dd>-10 else"var(--amber)", _p(dd),       "bg"if dd>-10 else"ba", "✅ Near high"if dd>-10 else"⚠️ In drawdown") +
+        _sig_row("QQQ RSI 35-day",         rsi,                   "var(--green)"if 45<=rsi<=75 else"var(--amber)", f"{rsi:.1f}", "bg"if 45<=rsi<=75 else"ba", "✅ Healthy"if 45<=rsi<=75 else"⚠️ Out of range") +
+        _sig_row("QQQ MACD (12/26/9)",     75 if macd_b else 25,  "var(--green)"if macd_b else"var(--red)",  "Bullish"if macd_b else"Bearish", "bg"if macd_b else"br", "✅ Bullish"if macd_b else"❌ Bearish") +
         _sig_row("SMH vs QQQ (20-day RS)", _bar(smh_gap,-15,15),  "var(--green)"if smh_gap>-3 else"var(--amber)", _p(smh_gap), "bg"if smh_gap>-3 else"ba", "✅ Leading"if smh_gap>-3 else"⚠️ Lagging")
     )
 
@@ -382,7 +382,7 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
                     "and better suits monthly DCA decisions. "
                     "Above 78: QQQ has been gaining unusually fast for an extended period — momentum is likely stretched.",
                     _bar(rsi,40,100), scores["rsi_35"], f"{rsi:.1f}", "78 · 83 · 88") +
-        _pt_sig_row("Distance above 200-day MA",
+        _pt_sig_row("QQQ distance above 200-day MA",
                     "How far QQQ's current price sits above its 200-day simple moving average of daily closes. "
                     "The 200MA is the most-watched long-term trend line. When QQQ runs 30%+ above it, "
                     "the market is historically extended — sharp pullbacks become more likely even without a trend reversal. "
@@ -453,9 +453,9 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     # ── regime tab entry conditions ──
     bull_conds = (
         _cond("VIX",                "Below 20",             f"{vix:.1f}",          vix<20) +
-        _cond("QQQ vs 200MA",       "Above MA",             f"{'Above'if above else'Below'} ({_p(abv_pct)})", above) +
-        _cond("RSI 35-day",         "45 – 75",              f"{rsi:.1f}",          45<=rsi<=75) +
-        _cond("MACD",               "Line above signal",    "Bullish"if macd_b else"Bearish", macd_b) +
+        _cond("QQQ vs 200-day MA",  "Above MA",             f"{'Above'if above else'Below'} ({_p(abv_pct)})", above) +
+        _cond("QQQ RSI 35-day",     "45 – 75",              f"{rsi:.1f}",          45<=rsi<=75) +
+        _cond("QQQ MACD",           "Line above signal",    "Bullish"if macd_b else"Bearish", macd_b) +
         _cond("SMH vs QQQ (20d RS)","Above −3%",            _p(smh_gap),           smh_gap>-3) +
         _cond("Confirmation needed","2 consecutive months", f"{consec} month{'s'if consec!=1 else''}", consec>=2)
     )
@@ -467,9 +467,9 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     )
     fear1_conds = (
         _cond("VIX",                "30 – 45",              f"{vix:.1f}",          30<=vix<45) +
-        _cond("QQQ vs 200MA",       "Below (expected)",     f"{'Above'if above else'Below'}",  not above) +
-        _cond("Drawdown from high", "15 – 35%",             _p(dd),                -35<=dd<=-15) +
-        _cond("RSI 35-day",         "Oversold (25–45)",     f"{rsi:.1f}",          rsi<45) +
+        _cond("QQQ vs 200-day MA",  "Below (expected)",     f"{'Above'if above else'Below'}",  not above) +
+        _cond("QQQ drawdown from 52w high", "15 – 35%",     _p(dd),                -35<=dd<=-15) +
+        _cond("QQQ RSI 35-day",     "Oversold (25–45)",     f"{rsi:.1f}",          rsi<45) +
         _cond("Confirmation",       "1 month",              f"{consec} month{'s'if consec!=1 else''}", consec>=1)
     )
     fear2_conds = (
@@ -843,12 +843,12 @@ body{{
       <div class="stat-sub">{vix_sub}</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-label">QQQ vs 200MA</div>
+      <div class="stat-label">QQQ vs 200-day MA</div>
       <div class="stat-val" style="color:{ma_sc}">{_p(abv_pct)}</div>
       <div class="stat-sub">{ma_sub}</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-label">RSI 35-day</div>
+      <div class="stat-label">QQQ RSI 35-day</div>
       <div class="stat-val" style="color:{rsi_sc}">{rsi:.1f}</div>
       <div class="stat-sub">{rsi_sub}</div>
     </div>
@@ -1054,9 +1054,9 @@ body{{
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Threshold (need 3 of 4)</th><th class="r">Today</th></tr></thead>
         <tbody>
           {_cond("VIX", f"Below {EUPHORIA_THRESHOLDS['vix_max']}", f"{vix:.1f}", vix < EUPHORIA_THRESHOLDS["vix_max"])}
-          {_cond("QQQ above 200MA", f"Above +{EUPHORIA_THRESHOLDS['above_200ma_min']}%", _p(abv_pct), abv_pct > EUPHORIA_THRESHOLDS["above_200ma_min"])}
-          {_cond("RSI 35-day", f"Above {EUPHORIA_THRESHOLDS['rsi_min']}", f"{rsi:.1f}", rsi > EUPHORIA_THRESHOLDS["rsi_min"])}
-          {_cond("12M QQQ return", f"Above +{EUPHORIA_THRESHOLDS['ret_12m_min']}%", _p(ret12m), ret12m > EUPHORIA_THRESHOLDS["ret_12m_min"])}
+          {_cond("QQQ above 200-day MA", f"Above +{EUPHORIA_THRESHOLDS['above_200ma_min']}%", _p(abv_pct), abv_pct > EUPHORIA_THRESHOLDS["above_200ma_min"])}
+          {_cond("QQQ RSI 35-day", f"Above {EUPHORIA_THRESHOLDS['rsi_min']}", f"{rsi:.1f}", rsi > EUPHORIA_THRESHOLDS["rsi_min"])}
+          {_cond("QQQ 12-month return", f"Above +{EUPHORIA_THRESHOLDS['ret_12m_min']}%", _p(ret12m), ret12m > EUPHORIA_THRESHOLDS["ret_12m_min"])}
           {_cond("Signals firing", f"{EUPHORIA_SIGNALS_REQUIRED}+ of 4", f"{euph_signals}/4", euph_signals >= EUPHORIA_SIGNALS_REQUIRED)}
           {_cond("Confirmation", f"{CONFIRM['to_euphoria']} consecutive months", f"{consec} month{'s' if consec!=1 else ''}", consec >= CONFIRM["to_euphoria"] and regime == "euphoria")}
         </tbody></table>
@@ -1253,7 +1253,7 @@ body{{
         <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--green)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
         <tr style="background:var(--s1)"><td><strong>Shiller CAPE (valuation ★)</strong></td><td class="r" style="color:var(--green)">below 28</td><td class="r">28+</td><td class="r">34+</td><td class="r">40+ (dot-com=44)</td></tr>
         <tr><td>RSI 35-day (QQQ daily closes)</td><td class="r" style="color:var(--green)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
-        <tr><td>Distance above 200MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
+        <tr><td>QQQ distance above 200-day MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
         <tr>
           <td>
             VIX complacency

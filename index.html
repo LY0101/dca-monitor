@@ -267,7 +267,7 @@ body{
 <div class="topbar">
   <div class="topbar-logo">DCA<span>·</span>Monitor</div>
   <div class="topbar-right">
-    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-06 10:27</div>
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-06 10:37</div>
     <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
@@ -361,12 +361,12 @@ body{
       <div class="stat-sub">Chop zone · 20–30</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-label">QQQ vs 200MA</div>
+      <div class="stat-label">QQQ vs 200-day MA</div>
       <div class="stat-val" style="color:var(--green)">+13.6%</div>
       <div class="stat-sub">Above 200-day MA</div>
     </div>
     <div class="stat-cell">
-      <div class="stat-label">RSI 35-day</div>
+      <div class="stat-label">QQQ RSI 35-day</div>
       <div class="stat-val" style="color:var(--green)">58.1</div>
       <div class="stat-sub">Healthy range</div>
     </div>
@@ -461,16 +461,16 @@ body{
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
         <div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0"></div>
-          <span style="color:var(--muted)">VIX 21.5 < 16.0</span>
+          <span style="color:var(--muted)">VIX 21.5 &lt; 16.0</span>
         </div><div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0"></div>
-          <span style="color:var(--muted)">QQQ +13.6% above 200MA (>18.0%)</span>
+          <span style="color:var(--muted)">QQQ +13.6% above its 200-day MA (&gt;18.0%)</span>
         </div><div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--border2);flex-shrink:0"></div>
-          <span style="color:var(--muted)">RSI 58.1 > 70.0</span>
+          <span style="color:var(--muted)">QQQ RSI-35 58.1 &gt; 70.0</span>
         </div><div style="display:flex;align-items:center;gap:8px;font-size:11px;padding:6px 8px;border-radius:6px;background:rgba(255,255,255,0.7)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--orange);flex-shrink:0"></div>
-          <span style="color:var(--ink)">12M return +34.0% > 30.0%</span>
+          <span style="color:var(--ink)">QQQ 12-month return +34.0% &gt; 30.0%</span>
         </div>
       </div>
     </div>
@@ -490,19 +490,19 @@ body{
         <div class="sig-status"><span class="badge bg">✅ Above</span></div>
       </div>
       <div class="sig-row">
-        <div class="sig-name">Drawdown from 52W high</div>
+        <div class="sig-name">QQQ drawdown from 52W high</div>
         <div class="sig-bar-track"><div class="sig-bar-fill" style="width:11.0%;background:var(--green)"></div></div>
         <div class="sig-val">-5.5%</div>
         <div class="sig-status"><span class="badge bg">✅ Near high</span></div>
       </div>
       <div class="sig-row">
-        <div class="sig-name">RSI 35-day (QQQ)</div>
+        <div class="sig-name">QQQ RSI 35-day</div>
         <div class="sig-bar-track"><div class="sig-bar-fill" style="width:58.1%;background:var(--green)"></div></div>
         <div class="sig-val">58.1</div>
         <div class="sig-status"><span class="badge bg">✅ Healthy</span></div>
       </div>
       <div class="sig-row">
-        <div class="sig-name">MACD Signal</div>
+        <div class="sig-name">QQQ MACD (12/26/9)</div>
         <div class="sig-bar-track"><div class="sig-bar-fill" style="width:25%;background:var(--red)"></div></div>
         <div class="sig-val">Bearish</div>
         <div class="sig-status"><span class="badge br">❌ Bearish</span></div>
@@ -712,9 +712,9 @@ body{
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Threshold (need 3 of 4)</th><th class="r">Today</th></tr></thead>
         <tbody>
           <tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 16.0</td><td class="r" style="color:var(--red)">21.5 ❌</td></tr>
-          <tr><td>QQQ above 200MA</td><td class="r" style="color:var(--muted)">Above +18.0%</td><td class="r" style="color:var(--red)">+13.6% ❌</td></tr>
-          <tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Above 70.0</td><td class="r" style="color:var(--red)">58.1 ❌</td></tr>
-          <tr><td>12M QQQ return</td><td class="r" style="color:var(--muted)">Above +30.0%</td><td class="r" style="color:var(--green)">+34.0% ✅</td></tr>
+          <tr><td>QQQ above 200-day MA</td><td class="r" style="color:var(--muted)">Above +18.0%</td><td class="r" style="color:var(--red)">+13.6% ❌</td></tr>
+          <tr><td>QQQ RSI 35-day</td><td class="r" style="color:var(--muted)">Above 70.0</td><td class="r" style="color:var(--red)">58.1 ❌</td></tr>
+          <tr><td>QQQ 12-month return</td><td class="r" style="color:var(--muted)">Above +30.0%</td><td class="r" style="color:var(--green)">+34.0% ✅</td></tr>
           <tr><td>Signals firing</td><td class="r" style="color:var(--muted)">3+ of 4</td><td class="r" style="color:var(--red)">1/4 ❌</td></tr>
           <tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 consecutive months</td><td class="r" style="color:var(--red)">0 months ❌</td></tr>
         </tbody></table>
@@ -749,7 +749,7 @@ body{
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Entry conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Bull threshold</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--red)">21.5 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+13.6%) ✅</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">58.1 ✅</td></tr><tr><td>MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+4.0% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">0 months ❌</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">Below 20</td><td class="r" style="color:var(--red)">21.5 ❌</td></tr><tr><td>QQQ vs 200-day MA</td><td class="r" style="color:var(--muted)">Above MA</td><td class="r" style="color:var(--green)">Above (+13.6%) ✅</td></tr><tr><td>QQQ RSI 35-day</td><td class="r" style="color:var(--muted)">45 – 75</td><td class="r" style="color:var(--green)">58.1 ✅</td></tr><tr><td>QQQ MACD</td><td class="r" style="color:var(--muted)">Line above signal</td><td class="r" style="color:var(--red)">Bearish ❌</td></tr><tr><td>SMH vs QQQ (20d RS)</td><td class="r" style="color:var(--muted)">Above −3%</td><td class="r" style="color:var(--green)">+4.0% ✅</td></tr><tr><td>Confirmation needed</td><td class="r" style="color:var(--muted)">2 consecutive months</td><td class="r" style="color:var(--red)">0 months ❌</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -839,7 +839,7 @@ body{
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Fear I conditions · today's values</div>
         <table class="tbl"><thead><tr><th>Signal</th><th class="r">Fear I range</th><th class="r">Today</th></tr></thead>
-        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">21.5 ❌</td></tr><tr><td>QQQ vs 200MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>Drawdown from high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-5.5% ❌</td></tr><tr><td>RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">58.1 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--red)">0 months ❌</td></tr></tbody></table>
+        <tbody><tr><td>VIX</td><td class="r" style="color:var(--muted)">30 – 45</td><td class="r" style="color:var(--red)">21.5 ❌</td></tr><tr><td>QQQ vs 200-day MA</td><td class="r" style="color:var(--muted)">Below (expected)</td><td class="r" style="color:var(--red)">Above ❌</td></tr><tr><td>QQQ drawdown from 52w high</td><td class="r" style="color:var(--muted)">15 – 35%</td><td class="r" style="color:var(--red)">-5.5% ❌</td></tr><tr><td>QQQ RSI 35-day</td><td class="r" style="color:var(--muted)">Oversold (25–45)</td><td class="r" style="color:var(--red)">58.1 ❌</td></tr><tr><td>Confirmation</td><td class="r" style="color:var(--muted)">1 month</td><td class="r" style="color:var(--red)">0 months ❌</td></tr></tbody></table>
       </div>
       <div class="card">
         <div class="sec-title" style="margin-bottom:12px">Monthly allocation · $10,000</div>
@@ -1005,7 +1005,7 @@ body{
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
-          <div class="sig-name">Distance above 200-day MA</div>
+          <div class="sig-name">QQQ distance above 200-day MA</div>
           <div class="sig-desc">How far QQQ's current price sits above its 200-day simple moving average of daily closes. The 200MA is the most-watched long-term trend line. When QQQ runs 30%+ above it, the market is historically extended — sharp pullbacks become more likely even without a trend reversal. Historically, readings above 40% have preceded corrections of 15–25%.</div>
         </div>
         <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:22.7%;background:var(--green)"></div></div>
@@ -1077,7 +1077,7 @@ body{
         <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--green)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
         <tr style="background:var(--s1)"><td><strong>Shiller CAPE (valuation ★)</strong></td><td class="r" style="color:var(--green)">below 28</td><td class="r">28+</td><td class="r">34+</td><td class="r">40+ (dot-com=44)</td></tr>
         <tr><td>RSI 35-day (QQQ daily closes)</td><td class="r" style="color:var(--green)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
-        <tr><td>Distance above 200MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
+        <tr><td>QQQ distance above 200-day MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
         <tr>
           <td>
             VIX complacency
@@ -1153,7 +1153,7 @@ body{
 
 </div><!-- /page -->
 
-<div class="footer">Last updated: 2026-06-06 10:27 &nbsp;·&nbsp; 1 month of regime history on record</div>
+<div class="footer">Last updated: 2026-06-06 10:37 &nbsp;·&nbsp; 1 month of regime history on record</div>
 
 <script>
 // ── injected live data ──

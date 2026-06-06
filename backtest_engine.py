@@ -158,6 +158,22 @@ def _maxdd(twr_index):
     return float((s / s.cummax() - 1).min() * 100)
 
 
+def bh_sim(prices, contrib):
+    """Buy & hold DCA into a single ETF: same $/month, never sold.
+    Returns (nav_series, monthly_twr, twr_index)."""
+    sh = 0.0
+    navs, twr, twr_idx = [], [], []
+    idx, prev = 1.0, None
+    for p in prices:
+        if prev is not None and prev > 0:
+            tw = (sh * p) / prev - 1
+            twr.append(tw); idx *= (1 + tw); twr_idx.append(idx)
+        sh += contrib * (1 - TXN_COST) / p
+        nav = sh * p
+        navs.append(nav); prev = nav
+    return navs, twr, twr_idx
+
+
 # ── strategy simulation ───────────────────────────────────────
 
 def run():
@@ -266,19 +282,10 @@ def run():
     df = pd.DataFrame(rows)
     contributed = df["Cum_Contrib"].iloc[-1]
     final = df["NAV"].iloc[-1]
-    bh_final = df["BH_NAV"].iloc[-1]
     years = (dates[-1] - dates[0]).days / 365.25
+    cfs = [-MONTHLY_BUDGET] * len(dates)
 
-    # ── B&H time-weighted returns for its Sharpe ──
-    bh_nav_series = df["BH_NAV"].values
-    bh_contrib = MONTHLY_BUDGET
-    bh_twr = []
-    for i in range(1, len(bh_nav_series)):
-        pre = bh_nav_series[i] - 0  # B&H grows then contributes; approximate growth
-        # reconstruct: prev nav grew to (this nav - this contribution's shares value)
-        bh_twr.append(bh_nav_series[i] / (bh_nav_series[i-1] + bh_contrib) - 1)
-
-    def metrics(name, twr_list, wts_list, twr_index, final_nav, cfs):
+    def metrics(name, twr_list, wts_list, twr_index, final_nav):
         ir = _annual_irr(cfs + [final_nav])
         return {
             "name": name,
@@ -296,21 +303,32 @@ def run():
             "worst_mo": round(min(twr_list)*100,1) if twr_list else None,
         }
 
-    cfs = [-MONTHLY_BUDGET] * len(dates)
-    strat = metrics("Adaptive strategy", twr, wts, twr_idx, final, cfs)
+    strat = metrics("Adaptive strategy", twr, wts, twr_idx, final)
 
-    # B&H twr index
-    bh_idx, x = [], 1.0
-    for r in bh_twr:
-        x *= (1 + r); bh_idx.append(x)
-    bh = metrics("Buy & Hold QQQ", bh_twr, bh_nav_series[:-1].tolist(), bh_idx, bh_final, cfs)
+    # ── Buy & Hold benchmarks for every ETF ──
+    benchmarks, bench_curves = {}, {}
+    for e in ETFS:
+        prices = [float(m.loc[dt, e]) for dt in dates]
+        navs, btwr, btwr_idx = bh_sim(prices, MONTHLY_BUDGET)
+        benchmarks[e] = metrics(f"B&H {e}", btwr, navs[:-1], btwr_idx, navs[-1])
+        bench_curves[e] = [round(v, 4) for v in ([1.0] + btwr_idx)]
 
     # growth-of-$1 time-weighted equity curves (start at 1.0)
     curve = {
         "dates": [d.strftime("%Y-%m") for d in dates],
         "strat": [round(v, 4) for v in ([1.0] + twr_idx)],
-        "bh":    [round(v, 4) for v in ([1.0] + bh_idx)],
+        **bench_curves,
     }
+
+    # compact month-by-month table for the dashboard tab
+    monthly = [{
+        "d": r["Date"].strftime("%Y-%m") if hasattr(r["Date"], "strftime") else str(r["Date"])[:7],
+        "reg": r["Regime"], "pt": r["ProfitTaking"], "c": r["Contribution"],
+        "bq": r["Buy_QQQ"], "bt": r["Buy_TQQQ"], "bs": r["Buy_SMH"], "bx": r["Buy_SOXL"],
+        "st": r["Sell_TQQQ"], "sx": r["Sell_SOXL"],
+        "hq": r["Sh_QQQ"], "ht": r["Sh_TQQQ"], "hs": r["Sh_SMH"], "hx": r["Sh_SOXL"],
+        "cash": r["Cash"], "nav": r["NAV"], "twr": r["Monthly_TWR_%"],
+    } for r in rows]
 
     # regime distribution
     dist = df["Regime"].value_counts().to_dict()
@@ -321,10 +339,10 @@ def run():
         "monthly_contribution": MONTHLY_BUDGET, "contributed": round(contributed),
         "growth_dollars": round(final - contributed),
         "growth_pct_of_final": round((final - contributed) / final * 100, 1),
-        "strategy": strat, "bh": bh,
+        "strategy": strat, "bh": benchmarks["QQQ"], "benchmarks": benchmarks,
         "regime_distribution": {k: int(v) for k, v in dist.items()},
         "rf_annual": RF_ANNUAL,
-        "curve": curve,
+        "curve": curve, "monthly": monthly,
     }
 
     _write_excel(df, summary)
@@ -332,36 +350,43 @@ def run():
         json.dump(summary, f, indent=2)
 
     print(f"\nContributed ${contributed:,.0f} over {years:.1f}y")
-    print(f"Strategy NAV ${strat['final']:,.0f}  ({strat['multiple']}x)  |  B&H QQQ ${bh['final']:,.0f}  ({bh['multiple']}x)")
-    print(f"Investment Sharpe  strat {strat['inv_sharpe']}  vs B&H {bh['inv_sharpe']}")
-    print(f"Contribution Sharpe strat {strat['contrib_sharpe']}  vs B&H {bh['contrib_sharpe']}")
-    print(f"Max drawdown (TWR) strat {strat['maxdd_pct']}%  vs B&H {bh['maxdd_pct']}%")
+    print(f"{'':22s}{'NAV':>16s}{'mult':>8s}{'CAGR':>8s}{'invSh':>7s}{'maxDD':>8s}")
+    def line(nm, d):
+        print(f"{nm:22s}{('$'+format(d['final'],',')):>16s}{str(d['multiple'])+'x':>8s}"
+              f"{str(d['twr_cagr'])+'%':>8s}{str(d['inv_sharpe']):>7s}{str(d['maxdd_pct'])+'%':>8s}")
+    line("Adaptive strategy", strat)
+    for e in ETFS:
+        line(f"B&H {e}", benchmarks[e])
     print(f"Wrote {XLSX} and {JSON}")
     return summary
 
 
 def _write_excel(df, s):
-    rows = [
-        ("Window", f"{s['start']} → {s['end']} ({s['years']} yrs, {s['months']} months)"),
-        ("Monthly contribution", f"${s['monthly_contribution']:,}"),
-        ("Total contributed", f"${s['contributed']:,}"),
-        ("", ""),
-        ("METRIC", "ADAPTIVE STRATEGY  |  BUY & HOLD QQQ"),
-        ("Final NAV", f"${s['strategy']['final']:,}   |   ${s['bh']['final']:,}"),
-        ("Total profit (NAV − contributed)", f"${s['strategy']['profit']:,}   |   ${s['bh']['profit']:,}"),
-        ("Multiple on invested", f"{s['strategy']['multiple']}x   |   {s['bh']['multiple']}x"),
-        ("Time-weighted CAGR", f"{s['strategy']['twr_cagr']}%/yr   |   {s['bh']['twr_cagr']}%/yr"),
-        ("Money-weighted IRR", f"{s['strategy']['irr_pct']}%/yr   |   {s['bh']['irr_pct']}%/yr"),
-        ("Investment Sharpe (equal-wt)", f"{s['strategy']['inv_sharpe']}   |   {s['bh']['inv_sharpe']}"),
-        ("Contribution Sharpe (capital-wt)", f"{s['strategy']['contrib_sharpe']}   |   {s['bh']['contrib_sharpe']}"),
-        ("Sortino", f"{s['strategy']['sortino']}   |   {s['bh']['sortino']}"),
-        ("Max drawdown (time-weighted)", f"{s['strategy']['maxdd_pct']}%   |   {s['bh']['maxdd_pct']}%"),
-        ("Win rate (positive months)", f"{s['strategy']['win_rate']}%   |   {s['bh']['win_rate']}%"),
-        ("Best / worst month", f"{s['strategy']['best_mo']}% / {s['strategy']['worst_mo']}%   |   {s['bh']['best_mo']}% / {s['bh']['worst_mo']}%"),
-        ("", ""),
-        ("Growth = $ from market", f"${s['growth_dollars']:,} ({s['growth_pct_of_final']}% of final NAV)"),
+    cols = [("Adaptive strategy", s["strategy"])] + [(f"B&H {e}", s["benchmarks"][e]) for e in ETFS]
+    def mrow(label, key, fmt):
+        return {"Metric": label, **{nm: fmt(d[key]) for nm, d in cols}}
+    metric_rows = [
+        mrow("Final NAV", "final", lambda v: f"${v:,}"),
+        mrow("Total profit", "profit", lambda v: f"${v:,}"),
+        mrow("Multiple on invested", "multiple", lambda v: f"{v}x"),
+        mrow("Time-weighted CAGR", "twr_cagr", lambda v: f"{v}%/yr"),
+        mrow("Money-weighted IRR", "irr_pct", lambda v: f"{v}%/yr"),
+        mrow("Investment Sharpe (equal-wt)", "inv_sharpe", lambda v: f"{v}"),
+        mrow("Contribution Sharpe (capital-wt)", "contrib_sharpe", lambda v: f"{v}"),
+        mrow("Sortino", "sortino", lambda v: f"{v}"),
+        mrow("Max drawdown (time-weighted)", "maxdd_pct", lambda v: f"{v}%"),
+        mrow("Win rate (positive months)", "win_rate", lambda v: f"{v}%"),
+        mrow("Best month", "best_mo", lambda v: f"{v}%"),
+        mrow("Worst month", "worst_mo", lambda v: f"{v}%"),
     ]
-    summ = pd.DataFrame(rows, columns=["Metric", "Value"])
+    summ = pd.DataFrame(metric_rows, columns=["Metric"] + [nm for nm, _ in cols])
+    hdr = pd.DataFrame([
+        {"Metric": "Window", "Adaptive strategy": f"{s['start']} → {s['end']} ({s['years']} yrs, {s['months']} months)"},
+        {"Metric": "Monthly contribution", "Adaptive strategy": f"${s['monthly_contribution']:,}"},
+        {"Metric": "Total contributed", "Adaptive strategy": f"${s['contributed']:,}"},
+        {"Metric": "", "Adaptive strategy": ""},
+    ])
+    summ = pd.concat([hdr, summ], ignore_index=True)
     dist = pd.DataFrame([(k, v) for k, v in s["regime_distribution"].items()],
                         columns=["Regime", "Months"])
 
@@ -400,10 +425,12 @@ def _write_excel(df, s):
         for col in wsm.columns:
             w = max(len(str(c.value)) if c.value is not None else 0 for c in col)
             wsm.column_dimensions[col[0].column_letter].width = min(max(w+1, 9), 16)
-        for nm in ("Summary", "Notes"):
-            ws = xl.sheets[nm]
-            ws.column_dimensions["A"].width = 34
-            ws.column_dimensions["B"].width = 90
+        wss = xl.sheets["Summary"]; wss.column_dimensions["A"].width = 34
+        for col_letter in ("B", "C", "D", "E", "F"):
+            wss.column_dimensions[col_letter].width = 18
+        wsn = xl.sheets["Notes"]
+        wsn.column_dimensions["A"].width = 22
+        wsn.column_dimensions["B"].width = 95
 
 
 if __name__ == "__main__":

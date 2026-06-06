@@ -196,121 +196,158 @@ def _load_backtest():
 
 
 def _render_equity_chart(curve) -> str:
-    """Inline SVG: growth of $1 (time-weighted, log scale), strategy vs B&H,
-    with the strategy's max-drawdown marked."""
+    """Inline SVG: growth of $1 (time-weighted, log scale) — strategy vs each
+    Buy & Hold ETF, with the strategy's max-drawdown marked."""
     if not curve or not curve.get("strat"):
         return ""
     import math
-    strat, bh, dates = curve["strat"], curve["bh"], curve["dates"]
-    n = len(strat)
-    W, H, L, R, T, Bm = 820, 360, 50, 16, 18, 30
+    dates = curve["dates"]
+    series = [("Adaptive strategy", curve["strat"], "#111827", 2.4)]
+    for etf, col in (("QQQ","#6b7280"),("SMH","#2563eb"),("TQQQ","#d97706"),("SOXL","#dc2626")):
+        if etf in curve:
+            series.append((f"B&H {etf}", curve[etf], col, 1.4))
+    n = len(curve["strat"])
+    W, H, L, R, T, Bm = 820, 380, 52, 16, 18, 30
     pw, ph = W - L - R, H - T - Bm
-    allv = [v for v in strat + bh if v > 0]
+    allv = [v for _, s, _, _ in series for v in s if v > 0]
     lo = math.floor(math.log10(min(min(allv), 0.9)))
     hi = math.ceil(math.log10(max(allv)))
     def X(i): return L + (i / (n - 1)) * pw
     def Y(v): return T + (hi - math.log10(max(v, 10 ** lo))) / (hi - lo) * ph
-    def poly(series): return " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(series))
+    def poly(s): return " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(s))
 
-    # horizontal gridlines at each power of 10
     grid = ""
     for p in range(lo, hi + 1):
         yy = Y(10 ** p)
-        lbl = f"${10**p:,.0f}" if p >= 0 else f"${10**p:g}"
         grid += (f'<line x1="{L}" y1="{yy:.1f}" x2="{W-R}" y2="{yy:.1f}" stroke="#e8ebed" stroke-width="1"/>'
-                 f'<text x="{L-6}" y="{yy+3:.1f}" text-anchor="end" font-size="9" fill="#9ca3af">{lbl}</text>')
-    # year ticks
+                 f'<text x="{L-6}" y="{yy+3:.1f}" text-anchor="end" font-size="9" fill="#9ca3af">${10**p:,.0f}</text>')
     seen = set(); ticks = ""
     for i, dt in enumerate(dates):
         yr = dt[:4]
         if yr not in seen and int(yr) % 2 == 0:
-            seen.add(yr)
-            xx = X(i)
+            seen.add(yr); xx = X(i)
             ticks += (f'<line x1="{xx:.1f}" y1="{T}" x2="{xx:.1f}" y2="{T+ph}" stroke="#f1f3f5" stroke-width="1"/>'
                       f'<text x="{xx:.1f}" y="{T+ph+14:.1f}" text-anchor="middle" font-size="9" fill="#9ca3af">{yr}</text>')
 
-    # strategy max drawdown (peak→trough on the strat curve)
-    peak = strat[0]; peak_i = 0; best_peak_i = 0; trough_i = 0; worst = 0.0; peak_at_worst = strat[0]
+    strat = curve["strat"]
+    peak = strat[0]; trough_i = 0; worst = 0.0; peak_at_worst = strat[0]
     for i, v in enumerate(strat):
-        if v > peak:
-            peak, peak_i = v, i
+        if v > peak: peak = v
         dd = v / peak - 1
-        if dd < worst:
-            worst, trough_i, peak_at_worst, best_peak_i = dd, i, peak, peak_i
+        if dd < worst: worst, trough_i, peak_at_worst = dd, i, peak
     dd_mark = ""
     if worst < -0.05:
-        xt = X(trough_i)
-        y_pk = Y(peak_at_worst); y_tr = Y(strat[trough_i])
-        dd_mark = (f'<line x1="{xt:.1f}" y1="{y_pk:.1f}" x2="{xt:.1f}" y2="{y_tr:.1f}" stroke="#dc2626" '
-                   f'stroke-width="1.5" stroke-dasharray="3,3"/>'
-                   f'<circle cx="{xt:.1f}" cy="{y_tr:.1f}" r="3.5" fill="#dc2626"/>'
-                   f'<text x="{xt+5:.1f}" y="{(y_pk+y_tr)/2:.1f}" font-size="10" font-weight="700" fill="#dc2626">'
-                   f'{worst*100:.0f}% drawdown</text>')
+        xt = X(trough_i); y_pk = Y(peak_at_worst); y_tr = Y(strat[trough_i])
+        dd_mark = (f'<line x1="{xt:.1f}" y1="{y_pk:.1f}" x2="{xt:.1f}" y2="{y_tr:.1f}" stroke="#111827" '
+                   f'stroke-width="1.3" stroke-dasharray="3,3"/>'
+                   f'<text x="{xt+5:.1f}" y="{(y_pk+y_tr)/2:.1f}" font-size="10" font-weight="700" fill="#111827">'
+                   f'strategy {worst*100:.0f}%</text>')
+
+    lines = "".join(f'<polyline fill="none" stroke="{c}" stroke-width="{w}" points="{poly(s)}"/>'
+                    for _, s, c, w in series if _ != "Adaptive strategy")
+    lines += f'<polyline fill="none" stroke="#111827" stroke-width="2.4" points="{poly(strat)}"/>'
+    legend = "".join(
+        f'<span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:3px;background:{c};display:inline-block;border-radius:2px"></span>{nm}</span>'
+        for nm, _, c, _ in series)
 
     return f"""
     <div class="card" style="margin-bottom:12px">
       <div class="sec-title" style="margin-bottom:6px">Growth of $1 · time-weighted, log scale</div>
-      <div style="display:flex;gap:16px;margin-bottom:6px;font-size:11px">
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:3px;background:#111827;display:inline-block;border-radius:2px"></span>Adaptive strategy</span>
-        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:3px;background:#9ca3af;display:inline-block;border-radius:2px"></span>Buy &amp; Hold QQQ</span>
-      </div>
+      <div style="display:flex;gap:14px;margin-bottom:6px;font-size:11px;flex-wrap:wrap">{legend}</div>
       <svg viewBox="0 0 {W} {H}" style="width:100%;height:auto;font-family:'IBM Plex Mono',monospace">
-        {grid}{ticks}
-        <polyline fill="none" stroke="#9ca3af" stroke-width="1.6" points="{poly(bh)}"/>
-        <polyline fill="none" stroke="#111827" stroke-width="2.2" points="{poly(strat)}"/>
-        {dd_mark}
+        {grid}{ticks}{lines}{dd_mark}
       </svg>
-      <div class="note">Each line is the growth of $1 invested in that strategy (contribution-neutral). Log scale — equal vertical
-      distance = equal % move, so the strategy's deeper dips are real risk, not just chart artefacts.</div>
+      <div class="note">Growth of $1 in each strategy (contribution-neutral). Log scale — equal vertical distance = equal % move.
+      Note how the highest-returning lines (SOXL, TQQQ) also plunge the deepest.</div>
     </div>"""
+
+
+def _render_monthly(rows) -> str:
+    if not rows:
+        return ""
+    hdr = ("Date","Regime","Profit-take","Contrib","Buy QQQ","Buy TQQQ","Buy SMH","Buy SOXL",
+           "Sell TQQQ","Sell SOXL","Sh QQQ","Sh TQQQ","Sh SMH","Sh SOXL","Cash","NAV","TWR %")
+    th = "".join(f'<th class="r">{h}</th>' if i else f'<th>{h}</th>' for i, h in enumerate(hdr))
+    def usd(v): return f"${v:,.0f}" if v else "—"
+    def sh(v):  return f"{v:,.0f}" if v else "—"
+    trs = ""
+    for r in rows:
+        rc = REGIME_COLOR.get(r["reg"], "var(--ink)")
+        ac = ALERT_COLOR.get(r["pt"], "var(--muted)")
+        tw = r["twr"]; twc = "var(--green)" if tw > 0 else "var(--red)" if tw < 0 else "var(--muted)"
+        trs += (f'<tr><td style="white-space:nowrap">{r["d"]}</td>'
+                f'<td style="color:{rc};font-weight:600">{r["reg"]}</td>'
+                f'<td style="color:{ac}">{r["pt"]}</td>'
+                f'<td class="r">{usd(r["c"])}</td>'
+                f'<td class="r">{usd(r["bq"])}</td><td class="r">{usd(r["bt"])}</td>'
+                f'<td class="r">{usd(r["bs"])}</td><td class="r">{usd(r["bx"])}</td>'
+                f'<td class="r" style="color:var(--red)">{usd(r["st"])}</td>'
+                f'<td class="r" style="color:var(--red)">{usd(r["sx"])}</td>'
+                f'<td class="r">{sh(r["hq"])}</td><td class="r">{sh(r["ht"])}</td>'
+                f'<td class="r">{sh(r["hs"])}</td><td class="r">{sh(r["hx"])}</td>'
+                f'<td class="r">{usd(r["cash"])}</td>'
+                f'<td class="r" style="font-weight:700">{usd(r["nav"])}</td>'
+                f'<td class="r" style="color:{twc}">{tw:+.1f}%</td></tr>')
+    return f"""
+    <div class="sec-title" style="margin-top:18px">Month-by-Month · Full Position Detail</div>
+    <div class="bt-scroll">
+      <table class="tbl bt-tbl">
+        <thead><tr>{th}</tr></thead>
+        <tbody>{trs}</tbody>
+      </table>
+    </div>
+    <div class="note">Every month: regime, profit-taking alert, the contribution, exactly what was bought and sold,
+    shares held in each ETF, cash reserve, total NAV, and that month's time-weighted return. Scroll within the box.
+    The same data (plus prices and the TWR index) is in <code>backtest.xlsx</code>.</div>"""
 
 
 def _render_backtest(s) -> str:
     if not s:
         return ('<div class="card"><div style="color:var(--muted);font-size:13px;line-height:1.7">'
                 'No backtest results yet. Run <code>python backtest_engine.py</code> to generate them.</div></div>')
-    st, bh = s["strategy"], s["bh"]
+    st = s["strategy"]
+    bm = s.get("benchmarks", {})
+    cols = [("Strategy", st)] + [(e, bm[e]) for e in ("QQQ","SMH","TQQQ","SOXL") if e in bm]
 
-    def row(label, sv, bv, better, fmt="{}", note=""):
-        # better: 'hi' = higher wins, 'lo' = lower wins, None = neutral
-        sv_s, bv_s = fmt.format(sv), fmt.format(bv)
-        sc = bc = "var(--ink)"
-        if better == "hi":
-            if sv > bv: sc = "var(--green)"
-            elif bv > sv: bc = "var(--green)"
-        elif better == "lo":
-            if sv < bv: sc = "var(--green)"
-            elif bv < sv: bc = "var(--green)"
-        return (f'<tr><td>{label}{("  ·  "+note) if note else ""}</td>'
-                f'<td class="r" style="color:{sc};font-weight:700">{sv_s}</td>'
-                f'<td class="r" style="color:{bc};font-weight:700">{bv_s}</td></tr>')
+    def row(label, key, fmt, better="hi", note=""):
+        vals = [d.get(key) for _, d in cols]
+        nums = [v for v in vals if isinstance(v, (int, float))]
+        win = (max(nums) if better == "hi" else min(nums)) if nums else None
+        tds = ""
+        for v in vals:
+            green = (v == win and better in ("hi", "lo") and len(nums) > 1)
+            col = "var(--green)" if green else "var(--ink)"
+            tds += f'<td class="r" style="color:{col};font-weight:700">{fmt.format(v)}</td>'
+        return f'<tr><td>{label}{("  ·  "+note) if note else ""}</td>{tds}</tr>'
 
     rows = (
-        row("Final NAV",                    st["final"], bh["final"], "hi", "${:,.0f}") +
-        row("Total profit",                 st["profit"], bh["profit"], "hi", "${:,.0f}") +
-        row("Multiple on invested",         st["multiple"], bh["multiple"], "hi", "{}x") +
-        row("Time-weighted CAGR",           st["twr_cagr"], bh["twr_cagr"], "hi", "{}%/yr") +
-        row("Money-weighted IRR",           st["irr_pct"], bh["irr_pct"], "hi", "{}%/yr") +
-        row("Investment Sharpe",            st["inv_sharpe"], bh["inv_sharpe"], "hi", "{}", "equal-weighted") +
-        row("Contribution Sharpe",          st["contrib_sharpe"], bh["contrib_sharpe"], "hi", "{}", "capital-weighted") +
-        row("Sortino",                      st["sortino"], bh["sortino"], "hi", "{}") +
-        row("Max drawdown",                 st["maxdd_pct"], bh["maxdd_pct"], "hi", "{}%", "time-weighted") +
-        row("Win rate (months up)",         st["win_rate"], bh["win_rate"], "hi", "{}%") +
-        row("Best / worst month",           f"{st['best_mo']}% / {st['worst_mo']}%",
-                                            f"{bh['best_mo']}% / {bh['worst_mo']}%", None)
+        row("Final NAV", "final", "${:,.0f}") +
+        row("Multiple on invested", "multiple", "{}x") +
+        row("Time-weighted CAGR", "twr_cagr", "{}%/yr") +
+        row("Money-weighted IRR", "irr_pct", "{}%/yr") +
+        row("Investment Sharpe", "inv_sharpe", "{}", "hi", "equal-wt") +
+        row("Contribution Sharpe", "contrib_sharpe", "{}", "hi", "capital-wt") +
+        row("Sortino", "sortino", "{}") +
+        row("Max drawdown", "maxdd_pct", "{}%", "hi", "less-negative wins") +
+        row("Win rate", "win_rate", "{}%") +
+        row("Worst month", "worst_mo", "{}%", "hi")
     )
+    th = "".join(f'<th class="r">{nm}</th>' for nm, _ in cols)
 
-    # verdict
-    more_money = st["multiple"] > bh["multiple"]
-    worse_risk = (st["inv_sharpe"] < bh["inv_sharpe"]) or (st["maxdd_pct"] < bh["maxdd_pct"])
-    verdict_color = "var(--amber)" if (more_money and worse_risk) else ("var(--green)" if more_money else "var(--red)")
-    verdict = (f"The leveraged adaptive strategy turned <strong>${s['contributed']:,}</strong> of contributions into "
-               f"<strong>${st['final']:,}</strong> ({st['multiple']}×) — vs Buy &amp; Hold QQQ at "
-               f"<strong>${bh['final']:,}</strong> ({bh['multiple']}×). ")
-    if more_money and worse_risk:
-        verdict += (f"But it earned that with a <strong>lower Sharpe</strong> ({st['inv_sharpe']} vs {bh['inv_sharpe']}) "
-                    f"and a far deeper drawdown (<strong>{st['maxdd_pct']}%</strong> vs {bh['maxdd_pct']}%). "
-                    f"More money, more risk — exactly why position-sizing is the real control.")
+    # verdict — compare strategy to the best benchmark on money and on Sharpe
+    best_mult = max(cols, key=lambda c: c[1]["multiple"])
+    best_shp  = max(cols, key=lambda c: c[1]["inv_sharpe"])
+    verdict = (
+        f"DCA-ing ${s['monthly_contribution']:,}/month for {s['years']} years turned "
+        f"<strong>${s['contributed']:,}</strong> of contributions into <strong>${st['final']:,}</strong> "
+        f"({st['multiple']}×) with the adaptive strategy. "
+        f"But naive Buy &amp; Hold of <strong>{best_mult[0]}</strong> made the most money ({best_mult[1]['multiple']}×), "
+        f"and <strong>{best_shp[0]}</strong> had the best risk-adjusted return (Sharpe {best_shp[1]['inv_sharpe']}). "
+        f"The leveraged funds win on raw return but at brutal drawdowns "
+        f"(SOXL { bm.get('SOXL',{}).get('maxdd_pct','?') }%, TQQQ { bm.get('TQQQ',{}).get('maxdd_pct','?') }%); "
+        f"the unleveraged QQQ/SMH win on Sharpe. The honest takeaway: leverage amplified the great decade, "
+        f"but added more risk than risk-adjusted return — which is exactly what position-sizing and the warnings are for."
+    )
 
     dist = s.get("regime_distribution", {})
     dist_order = ["euphoria","bull","chop","fear1","fear2"]
@@ -322,20 +359,23 @@ def _render_backtest(s) -> str:
         for k in dist_order if dist.get(k,0) > 0)
 
     return f"""
-    <div class="card" style="margin-bottom:12px;border-left:3px solid {verdict_color}">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{verdict_color};margin-bottom:6px">Verdict</div>
+    <div class="card" style="margin-bottom:12px;border-left:3px solid var(--amber)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:6px">Verdict</div>
       <div style="font-size:13px;line-height:1.8;color:var(--ink)">{verdict}</div>
     </div>
 
     {_render_equity_chart(s.get("curve"))}
 
     <div class="card" style="margin-bottom:12px">
-      <table class="tbl">
-        <thead><tr><th>Metric</th><th class="r">Adaptive strategy</th><th class="r">Buy &amp; Hold QQQ</th></tr></thead>
-        <tbody>{rows}</tbody>
-      </table>
-      <div class="note">Green = better. Both receive an identical ${s['monthly_contribution']:,}/month; only the allocation differs.
-      Of the final NAV, <strong>{s['growth_pct_of_final']}%</strong> is market growth and the rest is contributed capital.</div>
+      <div class="bt-scroll" style="max-height:none">
+        <table class="tbl">
+          <thead><tr><th>Metric</th>{th}</tr></thead>
+          <tbody>{rows}</tbody>
+        </table>
+      </div>
+      <div class="note">Green = best in row. All columns receive an identical ${s['monthly_contribution']:,}/month; only the
+      holdings differ. Each B&amp;H column = that ETF bought every month and never sold. Max drawdown is on the
+      time-weighted (contribution-neutral) return index.</div>
     </div>
 
     <div class="grid2">
@@ -347,12 +387,15 @@ def _render_backtest(s) -> str:
         </div>
       </div>
       <div class="card">
-        <div class="sec-title" style="margin-bottom:10px">Months in each regime ({s['months']} total)</div>
+        <div class="sec-title" style="margin-bottom:10px">Strategy months in each regime ({s['months']} total)</div>
         {dist_rows}
       </div>
     </div>
 
-    <div class="note" style="margin-top:12px">Window {s['start']} → {s['end']} ({s['years']} yrs). Full month-by-month positions, buys and sells are in <code>backtest.xlsx</code>.</div>
+    {_render_monthly(s.get("monthly"))}
+
+    <div class="note" style="margin-top:12px">Window {s['start']} → {s['end']} ({s['years']} yrs). Of the strategy's final NAV,
+    <strong>{s['growth_pct_of_final']}%</strong> is market growth and the rest is contributed capital.</div>
     """
 
 
@@ -1182,6 +1225,13 @@ body{{
 .quad-marker{{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--ink);border:3px solid #fff;box-shadow:0 0 0 2px var(--ink),0 3px 8px rgba(0,0,0,.35);transform:translate(-50%,-50%);z-index:20}}
 .quad-now{{position:absolute;transform:translate(-50%,-50%);background:var(--ink);color:#fff;font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:5px;white-space:nowrap;z-index:21}}
 .quad-axis-x{{text-align:center;font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;letter-spacing:.5px}}
+
+/* ── BACKTEST tables ── */
+.bt-scroll{{overflow:auto;max-height:460px;border:1px solid var(--border);border-radius:8px}}
+.bt-tbl{{font-size:11px}}
+.bt-tbl th{{position:sticky;top:0;background:var(--card);z-index:2;white-space:nowrap;padding:7px 9px}}
+.bt-tbl td{{white-space:nowrap;padding:7px 9px}}
+.bt-tbl td.r,.bt-tbl th.r{{font-family:'IBM Plex Mono',monospace}}
 
 /* ── MOBILE BOTTOM NAV ── */
 .mobile-nav{{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}}

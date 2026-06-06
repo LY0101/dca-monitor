@@ -221,37 +221,21 @@ def run():
         buys  = {e: 0.0 for e in ETFS}
         sells = {e: 0.0 for e in ETFS}
 
-        # 3a) profit-taking trims -> cash (SOXL first, then TQQQ)
-        trim = {"CAUTION": (0.20, 0.10), "EXTREME": (0.50, 0.50)}.get(alert)
-        if trim:
-            for etf, frac in (("SOXL", trim[0]), ("TQQQ", trim[1])):
-                if shares[etf] > 0:
-                    sh = shares[etf] * frac
-                    proceeds = sh * px[etf] * (1 - TXN_COST)
-                    shares[etf] -= sh
-                    cost[etf]   *= (1 - frac)
-                    cash += proceeds
-                    sells[etf] += sh * px[etf]
-
-        # 4) deploy this month's contribution per regime
+        # APPLES-TO-APPLES MODE: always fully invested — no profit-taking sells,
+        # no cash. The alert is still computed (shown for context) but not acted on.
+        # Euphoria deploys into the defensive unleveraged sleeve (QQQ/SMH) instead
+        # of holding cash, so every dollar stays in the market like Buy & Hold.
         contrib = MONTHLY_BUDGET
         cashflows.append(-contrib)
-        if regime == "euphoria":
-            cash += contrib                       # pause -> reserve
-        else:
-            if regime == "fear2":
-                deploy = contrib + cash; cash = 0.0   # spend the reserve in the crash
-                alloc_key = "fear2_lev"
-            else:
-                deploy = contrib
-                alloc_key = regime
-            for etf, w in ALLOCATIONS[alloc_key].items():
-                if w > 0:
-                    dollars = deploy * w
-                    sh = dollars * (1 - TXN_COST) / px[etf]
-                    shares[etf] += sh
-                    cost[etf]   += dollars
-                    buys[etf]   += dollars
+        alloc_key = {"euphoria": "chop", "fear2": "fear2_lev"}.get(regime, regime)
+        deploy = contrib
+        for etf, w in ALLOCATIONS[alloc_key].items():
+            if w > 0:
+                dollars = deploy * w
+                sh = dollars * (1 - TXN_COST) / px[etf]
+                shares[etf] += sh
+                cost[etf]   += dollars
+                buys[etf]   += dollars
 
         # 5) record
         holdings_val = sum(shares[e] * px[e] for e in ETFS)
@@ -391,15 +375,16 @@ def _write_excel(df, s):
                         columns=["Regime", "Months"])
 
     notes = pd.DataFrame({"Topic": [
-        "Contributions", "Fear II reserve", "Euphoria", "Profit-taking",
+        "Mode", "Contributions", "Allocation", "Euphoria", "Profit-taking",
         "Benchmark", "Investment Sharpe", "Contribution Sharpe", "TWR vs IRR",
         "Max drawdown", "Risk-free", "Transaction cost", "P/E signal",
     ], "Detail": [
-        f"Flat ${MONTHLY_BUDGET:,}/month DCA, identical for strategy and benchmark.",
-        "Cash saved in euphoria + profit-taking trims is deployed into TQQQ/SOXL during Fear II.",
-        "Euphoria months route the contribution to cash (pause), not the market.",
-        "Live evaluate(): CAUTION trims 20% SOXL + 10% TQQQ; EXTREME trims 50%/50%. Proceeds to cash.",
-        "Buy & Hold = same $/month into 100% QQQ, never sold.",
+        "APPLES-TO-APPLES: always fully invested — no cash, no profit-taking sells — so it is directly comparable to fully-invested Buy & Hold.",
+        f"Flat ${MONTHLY_BUDGET:,}/month DCA, identical for strategy and every benchmark.",
+        "Each month the full contribution buys the regime's target ETFs: bull/fear1/fear2 -> TQQQ+SOXL; chop -> QQQ+SMH.",
+        "Euphoria deploys into the defensive unleveraged sleeve (QQQ+SMH) instead of holding cash — stays fully invested.",
+        "Disabled in this comparison (the alert is still shown for context but triggers no sells).",
+        "Buy & Hold = same $/month into 100% of one ETF, never sold.",
         "Annualized Sharpe of monthly time-weighted returns, EQUAL-weighted (pure strategy skill).",
         "Same monthly returns but CAPITAL-weighted by dollars deployed — the 'growth of the asset' view.",
         "TWR = cash-flow-neutral strategy return. IRR = money-weighted, reflects contribution timing.",

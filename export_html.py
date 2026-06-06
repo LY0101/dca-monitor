@@ -337,16 +337,19 @@ def _render_backtest(s) -> str:
     # verdict — compare strategy to the best benchmark on money and on Sharpe
     best_mult = max(cols, key=lambda c: c[1]["multiple"])
     best_shp  = max(cols, key=lambda c: c[1]["inv_sharpe"])
+    tqqq = bm.get("TQQQ", {})
     verdict = (
-        f"DCA-ing ${s['monthly_contribution']:,}/month for {s['years']} years turned "
-        f"<strong>${s['contributed']:,}</strong> of contributions into <strong>${st['final']:,}</strong> "
-        f"({st['multiple']}×) with the adaptive strategy. "
-        f"But naive Buy &amp; Hold of <strong>{best_mult[0]}</strong> made the most money ({best_mult[1]['multiple']}×), "
-        f"and <strong>{best_shp[0]}</strong> had the best risk-adjusted return (Sharpe {best_shp[1]['inv_sharpe']}). "
-        f"The leveraged funds win on raw return but at brutal drawdowns "
-        f"(SOXL { bm.get('SOXL',{}).get('maxdd_pct','?') }%, TQQQ { bm.get('TQQQ',{}).get('maxdd_pct','?') }%); "
-        f"the unleveraged QQQ/SMH win on Sharpe. The honest takeaway: leverage amplified the great decade, "
-        f"but added more risk than risk-adjusted return — which is exactly what position-sizing and the warnings are for."
+        f"Fully invested (apples-to-apples), the adaptive strategy turned <strong>${s['contributed']:,}</strong> into "
+        f"<strong>${st['final']:,}</strong> ({st['multiple']}×) — essentially tying naive Buy &amp; Hold TQQQ "
+        f"({tqqq.get('multiple','?')}×), but with a <strong>lower Sharpe</strong> ({st['inv_sharpe']} vs {tqqq.get('inv_sharpe','?')}) "
+        f"and a slightly <strong>worse drawdown</strong> ({st['maxdd_pct']}% vs {tqqq.get('maxdd_pct','?')}%). "
+        f"In other words, all the regime-switching machinery roughly <em>replicated</em> holding TQQQ — it did not beat it "
+        f"on a risk-adjusted basis. Meanwhile unleveraged <strong>{best_shp[0]}</strong> had the best Sharpe overall "
+        f"({best_shp[1]['inv_sharpe']}) with a survivable {best_shp[1]['maxdd_pct']}% drawdown, and SOXL made the most money "
+        f"({bm.get('SOXL',{}).get('multiple','?')}×) at the deepest plunge ({bm.get('SOXL',{}).get('maxdd_pct','?')}%). "
+        f"The honest takeaway: over this best-case-for-tech window the cleverness didn't add risk-adjusted value — "
+        f"what actually governs the outcome is how much leverage you hold and whether you can survive an ~80% drawdown. "
+        f"Position size, not strategy complexity, is the real lever."
     )
 
     dist = s.get("regime_distribution", {})
@@ -1853,9 +1856,10 @@ body{{
   <div class="sec-title">Backtest · Adaptive Strategy vs Buy &amp; Hold</div>
   <div class="card" style="margin-bottom:12px">
     <div style="font-size:12.5px;line-height:1.8;color:var(--muted)">
-      A full backtest of the actual framework logic (same regime + profit-taking code the dashboard runs),
-      DCA-ing a flat ${MONTHLY_BUDGET:,}/month from the first month all four ETFs existed. Cash is saved in
-      Euphoria &amp; profit-taking trims, then deployed in Fear II.
+      Apples-to-apples backtest: the adaptive strategy is run <strong>fully invested</strong> — no cash, no
+      profit-taking sells — so it is directly comparable to always-invested Buy &amp; Hold. Each month the full
+      ${MONTHLY_BUDGET:,} contribution buys the regime's target ETFs (bull/fear → TQQQ+SOXL, chop/euphoria → QQQ+SMH),
+      from the first month all four ETFs existed.
     </div>
   </div>
   {_render_backtest(_bt)}

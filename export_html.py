@@ -301,6 +301,57 @@ def _render_monthly(rows) -> str:
     The same data (plus prices and the TWR index) is in <code>backtest.xlsx</code>.</div>"""
 
 
+def _render_alloc_chart(alloc) -> str:
+    """Stacked-area SVG: % of the strategy's holdings in each ETF, every month."""
+    if not alloc or not alloc.get("dates"):
+        return ""
+    dates = alloc["dates"]
+    n = len(dates)
+    order = [("QQQ", "#6b7280"), ("SMH", "#2563eb"), ("TQQQ", "#d97706"), ("SOXL", "#dc2626")]
+    order = [(e, c) for e, c in order if e in alloc]
+    W, H, L, R, T, Bm = 820, 300, 40, 16, 14, 28
+    pw, ph = W - L - R, H - T - Bm
+    def X(i): return L + (i / (n - 1)) * pw
+    def Y(p): return T + (100 - p) / 100 * ph
+
+    grid = ""
+    for p in (0, 25, 50, 75, 100):
+        yy = Y(p)
+        grid += (f'<line x1="{L}" y1="{yy:.1f}" x2="{W-R}" y2="{yy:.1f}" stroke="#e8ebed" stroke-width="1"/>'
+                 f'<text x="{L-6}" y="{yy+3:.1f}" text-anchor="end" font-size="9" fill="#9ca3af">{p}%</text>')
+    seen = set(); ticks = ""
+    for i, dt in enumerate(dates):
+        yr = dt[:4]
+        if yr not in seen and int(yr) % 2 == 0:
+            seen.add(yr); xx = X(i)
+            ticks += f'<text x="{xx:.1f}" y="{T+ph+14:.1f}" text-anchor="middle" font-size="9" fill="#9ca3af">{yr}</text>'
+
+    cum = [0.0] * n
+    areas = ""
+    for etf, col in order:
+        ser = alloc[etf]
+        top = [cum[j] + ser[j] for j in range(n)]
+        pts_top = " ".join(f"{X(j):.1f},{Y(top[j]):.1f}" for j in range(n))
+        pts_bot = " ".join(f"{X(j):.1f},{Y(cum[j]):.1f}" for j in range(n - 1, -1, -1))
+        areas += f'<polygon points="{pts_top} {pts_bot}" fill="{col}" fill-opacity="0.85" stroke="none"/>'
+        cum = top
+    legend = "".join(
+        f'<span style="display:flex;align-items:center;gap:5px"><span style="width:12px;height:12px;background:{c};display:inline-block;border-radius:3px"></span>{e}</span>'
+        for e, c in order)
+
+    return f"""
+    <div class="card" style="margin-bottom:12px">
+      <div class="sec-title" style="margin-bottom:6px">Portfolio composition over time · % of holdings in each ETF</div>
+      <div style="display:flex;gap:14px;margin-bottom:6px;font-size:11px;flex-wrap:wrap">{legend}</div>
+      <svg viewBox="0 0 {W} {H}" style="width:100%;height:auto;font-family:'IBM Plex Mono',monospace">
+        {grid}{ticks}{areas}
+      </svg>
+      <div class="note">Each band is that ETF's share of the strategy's value each month (sums to 100%). Watch the leveraged
+      bands (TQQQ amber, SOXL red) swell over time — both because most months are bull <em>and</em> because leverage
+      compounds faster — quietly concentrating risk even though new chop-month money goes to QQQ/SMH.</div>
+    </div>"""
+
+
 def _render_backtest(s) -> str:
     if not s:
         return ('<div class="card"><div style="color:var(--muted);font-size:13px;line-height:1.7">'
@@ -368,6 +419,8 @@ def _render_backtest(s) -> str:
     </div>
 
     {_render_equity_chart(s.get("curve"))}
+
+    {_render_alloc_chart(s.get("alloc"))}
 
     <div class="card" style="margin-bottom:12px">
       <div class="bt-scroll" style="max-height:none">

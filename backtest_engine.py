@@ -188,6 +188,7 @@ def run():
     rows = []
     prev_nav = None
     twr, wts, twr_idx = [], [], []
+    alloc_hist = {e: [] for e in ETFS}
     idx = 1.0
     cashflows = []          # for IRR (contributions negative)
 
@@ -241,6 +242,10 @@ def run():
         holdings_val = sum(shares[e] * px[e] for e in ETFS)
         nav = holdings_val + cash
         prev_nav = nav
+
+        # per-month % allocation across ETFs (of holdings value)
+        for e in ETFS:
+            alloc_hist[e].append(round(shares[e] * px[e] / holdings_val * 100, 1) if holdings_val > 0 else 0.0)
 
         # B&H: contribution into QQQ
         bh_sh += contrib * (1 - TXN_COST) / px["QQQ"]
@@ -327,6 +332,7 @@ def run():
         "regime_distribution": {k: int(v) for k, v in dist.items()},
         "rf_annual": RF_ANNUAL,
         "curve": curve, "monthly": monthly,
+        "alloc": {"dates": curve["dates"], **{e: alloc_hist[e] for e in ETFS}},
     }
 
     _write_excel(df, summary)

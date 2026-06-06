@@ -1,0 +1,48 @@
+{
+  "start": "2010-03-31",
+  "end": "2026-06-30",
+  "months": 196,
+  "years": 16.2,
+  "monthly_contribution": 10000,
+  "contributed": 1960000,
+  "growth_dollars": 72837068,
+  "growth_pct_of_final": 97.4,
+  "strategy": {
+    "name": "Adaptive strategy",
+    "final": 74797068,
+    "profit": 72837068,
+    "multiple": 38.16,
+    "twr_cagr": 36.0,
+    "irr_pct": 38.3,
+    "inv_sharpe": 0.86,
+    "contrib_sharpe": 0.67,
+    "sortino": 0.94,
+    "maxdd_pct": -75.4,
+    "win_rate": 62,
+    "best_mo": 63.4,
+    "worst_mo": -43.2
+  },
+  "bh": {
+    "name": "Buy & Hold QQQ",
+    "final": 11898665,
+    "profit": 9938665,
+    "multiple": 6.07,
+    "twr_cagr": 18.8,
+    "irr_pct": 19.6,
+    "inv_sharpe": 1.09,
+    "contrib_sharpe": 1.01,
+    "sortino": 1.19,
+    "maxdd_pct": -32.5,
+    "win_rate": 63,
+    "best_mo": 15.7,
+    "worst_mo": -13.6
+  },
+  "regime_distribution": {
+    "bull": 132,
+    "chop": 58,
+    "fear1": 3,
+    "euphoria": 2,
+    "fear2": 1
+  },
+  "rf_annual": 0.0
+}

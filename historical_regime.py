@@ -131,6 +131,14 @@ def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
     out["SMH_vs_QQQ_20d_RS_pct"] = (smh_20d - qqq_20d) * 100
 
     out["QQQ_return_12m_pct"] = (qqq / qqq.shift(252) - 1) * 100
+
+    # 1-month (21d) annualized realized volatility + percentile vs full history
+    for name, series in (("QQQ", qqq), ("SMH", smh)):
+        ret = np.log(series / series.shift(1))
+        rv  = ret.rolling(21).std() * np.sqrt(252) * 100
+        out[f"{name}_rvol"] = rv
+        out[f"{name}_rvol_pctile"] = rv.rank(pct=True) * 100  # percentile vs all history
+
     return out
 
 
@@ -235,6 +243,20 @@ def main():
     # valuation warning (CAPE-based historically; live version also uses QQQ P/E)
     weekly["valuation_warning"] = [VALUATION_LABELS[_cape_score(v)] for v in weekly["CAPE"]]
 
+    # volatility x valuation quadrant
+    def _vv(rvpct, cape):
+        if pd.isna(rvpct) or pd.isna(cape):
+            return ""
+        sc = _cape_score(cape)
+        hi, lo = rvpct >= 66, rvpct < 40
+        exp, cheap = sc >= 2, sc == 0
+        if hi and exp:    return "Bubble-bursting risk"
+        if hi and cheap:  return "Stress + cheap (opportunity)"
+        if lo and exp:    return "Complacency at extremes"
+        if lo and cheap:  return "Calm & cheap"
+        return "Mixed"
+    weekly["vol_valuation"] = [_vv(rp, cp) for rp, cp in zip(weekly["QQQ_rvol_pctile"], weekly["CAPE"])]
+
     # tidy for output
     weekly = weekly.reset_index().rename(columns={"index": "Date", "Date": "Date"})
     weekly["Date"] = pd.to_datetime(weekly["Date"]).dt.date
@@ -242,14 +264,16 @@ def main():
     cols = ["Date", "QQQ", "TQQQ", "SMH", "SOXL", "VIX",
             "QQQ_200d_SMA", "QQQ_above_200ma_pct", "QQQ_drawdown_52w_pct",
             "RSI_35", "MACD_bull", "SMH_vs_QQQ_20d_RS_pct", "QQQ_return_12m_pct",
-            "CAPE", "valuation_warning",
+            "QQQ_rvol", "QQQ_rvol_pctile", "SMH_rvol", "SMH_rvol_pctile",
+            "CAPE", "valuation_warning", "vol_valuation",
             "euphoria_signals", "raw_regime", "regime_hysteresis"]
     weekly = weekly[cols]
 
     # round numerics
     rnd = {"QQQ":2,"TQQQ":2,"SMH":2,"SOXL":2,"VIX":2,"QQQ_200d_SMA":2,
            "QQQ_above_200ma_pct":1,"QQQ_drawdown_52w_pct":1,"RSI_35":1,
-           "SMH_vs_QQQ_20d_RS_pct":2,"QQQ_return_12m_pct":1,"CAPE":1}
+           "SMH_vs_QQQ_20d_RS_pct":2,"QQQ_return_12m_pct":1,"CAPE":1,
+           "QQQ_rvol":1,"QQQ_rvol_pctile":0,"SMH_rvol":1,"SMH_rvol_pctile":0}
     for c, n in rnd.items():
         weekly[c] = weekly[c].round(n)
 
@@ -282,7 +306,8 @@ def main():
         "Date", "QQQ / TQQQ / SMH / SOXL", "VIX",
         "QQQ_200d_SMA", "QQQ_above_200ma_pct", "QQQ_drawdown_52w_pct",
         "RSI_35", "MACD_bull", "SMH_vs_QQQ_20d_RS_pct", "QQQ_return_12m_pct",
-        "CAPE", "valuation_warning",
+        "QQQ_rvol / SMH_rvol (+ _pctile)", "",
+        "CAPE", "valuation_warning", "vol_valuation",
         "euphoria_signals", "raw_regime", "regime_hysteresis",
         "METHOD: indicators", "METHOD: VIX bands", "METHOD: euphoria",
         "METHOD: hysteresis", "DATA",
@@ -297,8 +322,11 @@ def main():
         "True when MACD line (12/26/9) is above its signal line.",
         "QQQ-relative 20-day return of SMH (semis leadership). Blank before SMH data.",
         "QQQ trailing 12-month (252-day) % return.",
+        "1-month (21-day) annualized realized volatility of QQQ / SMH (std of daily log returns x sqrt(252)). *_pctile = where that reading ranks vs the ticker's full history (0-100).",
+        "(see QQQ_rvol)",
         "Shiller CAPE (S&P 500 cyclically-adjusted P/E), monthly, forward-filled. The dot-com bubble gauge — peaked at 44 in Dec 1999.",
         "Valuation warning level from CAPE: Normal <28 | Elevated 28+ | Extreme 34+ | Bubble 40+. VIX-independent, so it catches the 2000 top the VIX regime missed.",
+        "Volatility x valuation quadrant: high realized vol + expensive = bubble-bursting risk; high vol + cheap = opportunity; low vol + expensive = complacency; low vol + cheap = calm & cheap.",
         "How many of the 4 euphoria signals fire (VIX<16, >18% above 200MA, RSI35>70, 12M ret>30%).",
         "Instantaneous regime that week (VIX bands + euphoria overlay). No smoothing.",
         "Regime after weekly hysteresis smoothing — the one the framework would actually act on.",

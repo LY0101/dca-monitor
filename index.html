@@ -246,8 +246,9 @@ body{
 
 /* ── MOBILE BOTTOM NAV ── */
 .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}
-.mobile-nav-inner{display:flex}
-.mnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;font-size:9px;font-weight:600;letter-spacing:.3px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .15s ease}
+.mobile-nav-inner{display:flex;overflow-x:auto;scrollbar-width:none}
+.mobile-nav-inner::-webkit-scrollbar{display:none}
+.mnav-btn{flex:1 0 auto;min-width:60px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;font-size:9px;font-weight:600;letter-spacing:.3px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .15s ease}
 .mnav-btn.active{color:var(--green)}
 .mnav-icon{font-size:18px;line-height:1}
 
@@ -281,7 +282,7 @@ body{
 <div class="topbar">
   <div class="topbar-logo">DCA<span>·</span>Monitor</div>
   <div class="topbar-right">
-    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-06 11:04</div>
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-06 11:19</div>
     <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
@@ -297,6 +298,7 @@ body{
   <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
+  <button class="ntab" onclick="tab('backtest',this)">Backtest</button>
   <button class="ntab" onclick="tab('tips',this)">Tips</button>
   <button class="ntab" onclick="tab('legend',this)">Legend</button>
 </div>
@@ -309,6 +311,7 @@ body{
     <button class="mnav-btn" onclick="tabM('regime',this)"><div class="mnav-icon">🗺️</div>Regime</button>
     <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
     <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
+    <button class="mnav-btn" onclick="tabM('backtest',this)"><div class="mnav-icon">🧪</div>Backtest</button>
     <button class="mnav-btn" onclick="tabM('tips',this)"><div class="mnav-icon">💡</div>Tips</button>
     <button class="mnav-btn" onclick="tabM('legend',this)"><div class="mnav-icon">📖</div>Legend</button>
   </div>
@@ -1150,6 +1153,49 @@ body{
   </div>
 </div>
 
+<!-- ══════════ BACKTEST ══════════ -->
+<div class="panel" id="panel-backtest">
+  <div class="sec-title">Backtest · Adaptive Strategy vs Buy &amp; Hold</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:12.5px;line-height:1.8;color:var(--muted)">
+      A full backtest of the actual framework logic (same regime + profit-taking code the dashboard runs),
+      DCA-ing a flat $10,000/month from the first month all four ETFs existed. Cash is saved in
+      Euphoria &amp; profit-taking trims, then deployed in Fear II.
+    </div>
+  </div>
+  
+    <div class="card" style="margin-bottom:12px;border-left:3px solid var(--amber)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);margin-bottom:6px">Verdict</div>
+      <div style="font-size:13px;line-height:1.8;color:var(--ink)">The leveraged adaptive strategy turned <strong>$1,960,000</strong> of contributions into <strong>$74,797,068</strong> (38.16×) — vs Buy &amp; Hold QQQ at <strong>$11,898,665</strong> (6.07×). But it earned that with a <strong>lower Sharpe</strong> (0.86 vs 1.09) and a far deeper drawdown (<strong>-75.4%</strong> vs -32.5%). More money, more risk — exactly why position-sizing is the real control.</div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <table class="tbl">
+        <thead><tr><th>Metric</th><th class="r">Adaptive strategy</th><th class="r">Buy &amp; Hold QQQ</th></tr></thead>
+        <tbody><tr><td>Final NAV</td><td class="r" style="color:var(--green);font-weight:700">$74,797,068</td><td class="r" style="color:var(--ink);font-weight:700">$11,898,665</td></tr><tr><td>Total profit</td><td class="r" style="color:var(--green);font-weight:700">$72,837,068</td><td class="r" style="color:var(--ink);font-weight:700">$9,938,665</td></tr><tr><td>Multiple on invested</td><td class="r" style="color:var(--green);font-weight:700">38.16x</td><td class="r" style="color:var(--ink);font-weight:700">6.07x</td></tr><tr><td>Time-weighted CAGR</td><td class="r" style="color:var(--green);font-weight:700">36.0%/yr</td><td class="r" style="color:var(--ink);font-weight:700">18.8%/yr</td></tr><tr><td>Money-weighted IRR</td><td class="r" style="color:var(--green);font-weight:700">38.3%/yr</td><td class="r" style="color:var(--ink);font-weight:700">19.6%/yr</td></tr><tr><td>Investment Sharpe  ·  equal-weighted</td><td class="r" style="color:var(--ink);font-weight:700">0.86</td><td class="r" style="color:var(--green);font-weight:700">1.09</td></tr><tr><td>Contribution Sharpe  ·  capital-weighted</td><td class="r" style="color:var(--ink);font-weight:700">0.67</td><td class="r" style="color:var(--green);font-weight:700">1.01</td></tr><tr><td>Sortino</td><td class="r" style="color:var(--ink);font-weight:700">0.94</td><td class="r" style="color:var(--green);font-weight:700">1.19</td></tr><tr><td>Max drawdown  ·  time-weighted</td><td class="r" style="color:var(--ink);font-weight:700">-75.4%</td><td class="r" style="color:var(--green);font-weight:700">-32.5%</td></tr><tr><td>Win rate (months up)</td><td class="r" style="color:var(--ink);font-weight:700">62%</td><td class="r" style="color:var(--green);font-weight:700">63%</td></tr><tr><td>Best / worst month</td><td class="r" style="color:var(--ink);font-weight:700">63.4% / -43.2%</td><td class="r" style="color:var(--ink);font-weight:700">15.7% / -13.6%</td></tr></tbody>
+      </table>
+      <div class="note">Green = better. Both receive an identical $10,000/month; only the allocation differs.
+      Of the final NAV, <strong>97.4%</strong> is market growth and the rest is contributed capital.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:10px">Two Sharpe ratios — what they mean</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--muted)">
+          <strong style="color:var(--ink)">Investment Sharpe</strong> weights every month equally — pure strategy skill, independent of when you added cash.<br><br>
+          <strong style="color:var(--ink)">Contribution Sharpe</strong> weights each month by the dollars at work — the "growth of the asset" view that reflects your real DCA experience (returns matter most once the pot is large).
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:10px">Months in each regime (196 total)</div>
+        <div class="alloc-bar-row"><div class="alloc-t" style="color:var(--orange);width:70px">euphoria</div><div class="alloc-track"><div class="alloc-fill" style="width:1%;background:var(--orange)"></div></div><div class="alloc-p">2</div></div><div class="alloc-bar-row"><div class="alloc-t" style="color:var(--green);width:70px">bull</div><div class="alloc-track"><div class="alloc-fill" style="width:67%;background:var(--green)"></div></div><div class="alloc-p">132</div></div><div class="alloc-bar-row"><div class="alloc-t" style="color:var(--amber);width:70px">chop</div><div class="alloc-track"><div class="alloc-fill" style="width:30%;background:var(--amber)"></div></div><div class="alloc-p">58</div></div><div class="alloc-bar-row"><div class="alloc-t" style="color:var(--red);width:70px">fear1</div><div class="alloc-track"><div class="alloc-fill" style="width:2%;background:var(--red)"></div></div><div class="alloc-p">3</div></div><div class="alloc-bar-row"><div class="alloc-t" style="color:var(--purple);width:70px">fear2</div><div class="alloc-track"><div class="alloc-fill" style="width:1%;background:var(--purple)"></div></div><div class="alloc-p">1</div></div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:12px">Window 2010-03-31 → 2026-06-30 (16.2 yrs). Full month-by-month positions, buys and sells are in <code>backtest.xlsx</code>.</div>
+    
+</div>
+
 <!-- ══════════ TIPS ══════════ -->
 <div class="panel" id="panel-tips">
   <div class="sec-title">💡 Investment Tips · Hard-Won Wisdom</div>
@@ -1384,7 +1430,7 @@ body{
 
 </div><!-- /page -->
 
-<div class="footer">Last updated: 2026-06-06 11:04 &nbsp;·&nbsp; 1 month of regime history on record</div>
+<div class="footer">Last updated: 2026-06-06 11:19 &nbsp;·&nbsp; 1 month of regime history on record</div>
 
 <script>
 // ── injected live data ──

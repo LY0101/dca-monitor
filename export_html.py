@@ -187,6 +187,103 @@ LEGEND_CONCEPTS = [
 ]
 
 
+def _load_backtest():
+    try:
+        with open("backtest_summary.json") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _render_backtest(s) -> str:
+    if not s:
+        return ('<div class="card"><div style="color:var(--muted);font-size:13px;line-height:1.7">'
+                'No backtest results yet. Run <code>python backtest_engine.py</code> to generate them.</div></div>')
+    st, bh = s["strategy"], s["bh"]
+
+    def row(label, sv, bv, better, fmt="{}", note=""):
+        # better: 'hi' = higher wins, 'lo' = lower wins, None = neutral
+        sv_s, bv_s = fmt.format(sv), fmt.format(bv)
+        sc = bc = "var(--ink)"
+        if better == "hi":
+            if sv > bv: sc = "var(--green)"
+            elif bv > sv: bc = "var(--green)"
+        elif better == "lo":
+            if sv < bv: sc = "var(--green)"
+            elif bv < sv: bc = "var(--green)"
+        return (f'<tr><td>{label}{("  ·  "+note) if note else ""}</td>'
+                f'<td class="r" style="color:{sc};font-weight:700">{sv_s}</td>'
+                f'<td class="r" style="color:{bc};font-weight:700">{bv_s}</td></tr>')
+
+    rows = (
+        row("Final NAV",                    st["final"], bh["final"], "hi", "${:,.0f}") +
+        row("Total profit",                 st["profit"], bh["profit"], "hi", "${:,.0f}") +
+        row("Multiple on invested",         st["multiple"], bh["multiple"], "hi", "{}x") +
+        row("Time-weighted CAGR",           st["twr_cagr"], bh["twr_cagr"], "hi", "{}%/yr") +
+        row("Money-weighted IRR",           st["irr_pct"], bh["irr_pct"], "hi", "{}%/yr") +
+        row("Investment Sharpe",            st["inv_sharpe"], bh["inv_sharpe"], "hi", "{}", "equal-weighted") +
+        row("Contribution Sharpe",          st["contrib_sharpe"], bh["contrib_sharpe"], "hi", "{}", "capital-weighted") +
+        row("Sortino",                      st["sortino"], bh["sortino"], "hi", "{}") +
+        row("Max drawdown",                 st["maxdd_pct"], bh["maxdd_pct"], "hi", "{}%", "time-weighted") +
+        row("Win rate (months up)",         st["win_rate"], bh["win_rate"], "hi", "{}%") +
+        row("Best / worst month",           f"{st['best_mo']}% / {st['worst_mo']}%",
+                                            f"{bh['best_mo']}% / {bh['worst_mo']}%", None)
+    )
+
+    # verdict
+    more_money = st["multiple"] > bh["multiple"]
+    worse_risk = (st["inv_sharpe"] < bh["inv_sharpe"]) or (st["maxdd_pct"] < bh["maxdd_pct"])
+    verdict_color = "var(--amber)" if (more_money and worse_risk) else ("var(--green)" if more_money else "var(--red)")
+    verdict = (f"The leveraged adaptive strategy turned <strong>${s['contributed']:,}</strong> of contributions into "
+               f"<strong>${st['final']:,}</strong> ({st['multiple']}×) — vs Buy &amp; Hold QQQ at "
+               f"<strong>${bh['final']:,}</strong> ({bh['multiple']}×). ")
+    if more_money and worse_risk:
+        verdict += (f"But it earned that with a <strong>lower Sharpe</strong> ({st['inv_sharpe']} vs {bh['inv_sharpe']}) "
+                    f"and a far deeper drawdown (<strong>{st['maxdd_pct']}%</strong> vs {bh['maxdd_pct']}%). "
+                    f"More money, more risk — exactly why position-sizing is the real control.")
+
+    dist = s.get("regime_distribution", {})
+    dist_order = ["euphoria","bull","chop","fear1","fear2"]
+    dcol = {"euphoria":"var(--orange)","bull":"var(--green)","chop":"var(--amber)","fear1":"var(--red)","fear2":"var(--purple)"}
+    dist_rows = "".join(
+        f'<div class="alloc-bar-row"><div class="alloc-t" style="color:{dcol[k]};width:70px">{k}</div>'
+        f'<div class="alloc-track"><div class="alloc-fill" style="width:{dist.get(k,0)/s["months"]*100:.0f}%;background:{dcol[k]}"></div></div>'
+        f'<div class="alloc-p">{dist.get(k,0)}</div></div>'
+        for k in dist_order if dist.get(k,0) > 0)
+
+    return f"""
+    <div class="card" style="margin-bottom:12px;border-left:3px solid {verdict_color}">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{verdict_color};margin-bottom:6px">Verdict</div>
+      <div style="font-size:13px;line-height:1.8;color:var(--ink)">{verdict}</div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <table class="tbl">
+        <thead><tr><th>Metric</th><th class="r">Adaptive strategy</th><th class="r">Buy &amp; Hold QQQ</th></tr></thead>
+        <tbody>{rows}</tbody>
+      </table>
+      <div class="note">Green = better. Both receive an identical ${s['monthly_contribution']:,}/month; only the allocation differs.
+      Of the final NAV, <strong>{s['growth_pct_of_final']}%</strong> is market growth and the rest is contributed capital.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:10px">Two Sharpe ratios — what they mean</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--muted)">
+          <strong style="color:var(--ink)">Investment Sharpe</strong> weights every month equally — pure strategy skill, independent of when you added cash.<br><br>
+          <strong style="color:var(--ink)">Contribution Sharpe</strong> weights each month by the dollars at work — the "growth of the asset" view that reflects your real DCA experience (returns matter most once the pot is large).
+        </div>
+      </div>
+      <div class="card">
+        <div class="sec-title" style="margin-bottom:10px">Months in each regime ({s['months']} total)</div>
+        {dist_rows}
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:12px">Window {s['start']} → {s['end']} ({s['years']} yrs). Full month-by-month positions, buys and sells are in <code>backtest.xlsx</code>.</div>
+    """
+
+
 def _render_legend() -> str:
     out = ""
     for cat, items in LEGEND:
@@ -494,6 +591,7 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     tg      = d.get("tqqq_gain_pct")
     qrv     = d.get("qqq_rvol");  qrv_p = d.get("qqq_rvol_pct")
     srv     = d.get("smh_rvol");  srv_p = d.get("smh_rvol_pct")
+    _bt     = _load_backtest()
     n_hist  = len(history)
 
     consec = 0
@@ -1015,8 +1113,9 @@ body{{
 
 /* ── MOBILE BOTTOM NAV ── */
 .mobile-nav{{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}}
-.mobile-nav-inner{{display:flex}}
-.mnav-btn{{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;font-size:9px;font-weight:600;letter-spacing:.3px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .15s ease}}
+.mobile-nav-inner{{display:flex;overflow-x:auto;scrollbar-width:none}}
+.mobile-nav-inner::-webkit-scrollbar{{display:none}}
+.mnav-btn{{flex:1 0 auto;min-width:60px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;font-size:9px;font-weight:600;letter-spacing:.3px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .15s ease}}
 .mnav-btn.active{{color:var(--green)}}
 .mnav-icon{{font-size:18px;line-height:1}}
 
@@ -1066,6 +1165,7 @@ body{{
   <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
+  <button class="ntab" onclick="tab('backtest',this)">Backtest</button>
   <button class="ntab" onclick="tab('tips',this)">Tips</button>
   <button class="ntab" onclick="tab('legend',this)">Legend</button>
 </div>
@@ -1078,6 +1178,7 @@ body{{
     <button class="mnav-btn" onclick="tabM('regime',this)"><div class="mnav-icon">🗺️</div>Regime</button>
     <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
     <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
+    <button class="mnav-btn" onclick="tabM('backtest',this)"><div class="mnav-icon">🧪</div>Backtest</button>
     <button class="mnav-btn" onclick="tabM('tips',this)"><div class="mnav-icon">💡</div>Tips</button>
     <button class="mnav-btn" onclick="tabM('legend',this)"><div class="mnav-icon">📖</div>Legend</button>
   </div>
@@ -1623,6 +1724,19 @@ body{{
       </tbody>
     </table>
   </div>
+</div>
+
+<!-- ══════════ BACKTEST ══════════ -->
+<div class="panel" id="panel-backtest">
+  <div class="sec-title">Backtest · Adaptive Strategy vs Buy &amp; Hold</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:12.5px;line-height:1.8;color:var(--muted)">
+      A full backtest of the actual framework logic (same regime + profit-taking code the dashboard runs),
+      DCA-ing a flat ${MONTHLY_BUDGET:,}/month from the first month all four ETFs existed. Cash is saved in
+      Euphoria &amp; profit-taking trims, then deployed in Fear II.
+    </div>
+  </div>
+  {_render_backtest(_bt)}
 </div>
 
 <!-- ══════════ TIPS ══════════ -->

@@ -73,6 +73,9 @@ INVESTMENT_TIPS = [
     ("Leverage", "var(--amber)",
      "Skip the daily circuit breaker",
      "Single-day stops whipsaw viciously on 3× ETFs, and you can't execute intraday on a framework you check once a day."),
+    ("Timing", "var(--purple)",
+     "CAPE catches valuation bubbles that momentum misses",
+     "Shiller CAPE flagged BUBBLE at the 2000 top while VIX/momentum stayed calm. It's the one signal that sees an expensive market at low volatility."),
 ]
 
 

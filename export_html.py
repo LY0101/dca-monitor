@@ -151,6 +151,38 @@ def _rvol_interpretation(regime, qpct, spct):
     return base
 
 
+def _vol_valuation_signal(rvpct, cape, cape_score):
+    """The volatility x valuation quadrant — the key synthesis.
+    Returns (icon, headline, color, message) or None."""
+    if rvpct is None or cape is None:
+        return None
+    hi_vol    = rvpct >= 66
+    lo_vol    = rvpct < 40
+    expensive = cape_score >= 2          # CAPE >= 34 (Extreme/Bubble)
+    cheap     = cape_score == 0          # CAPE < 28
+    cv = f"CAPE {cape}"
+    rv = f"realized vol {rvpct:.0f}th pctile"
+    if hi_vol and expensive:
+        return ("🔴", "Bubble-bursting risk", "var(--red)",
+            f"High volatility ({rv}) WHILE valuations are extreme ({cv}). Historically the most dangerous "
+            f"combination — stress hitting an expensive market, as in 2000–02. Favor defense: pause new leverage, "
+            f"trim into bounces, build the reserve.")
+    if hi_vol and cheap:
+        return ("🟢", "Stress + cheap = opportunity", "var(--green)",
+            f"High volatility ({rv}) at LOW valuations ({cv}). Historically a great accumulation backdrop — "
+            f"fear is high but you are not overpaying (e.g. late 2008–09). This is when the framework's "
+            f"fear-buying earns its returns.")
+    if lo_vol and expensive:
+        return ("🟠", "Complacency at extremes", "var(--orange)",
+            f"Calm markets ({rv}) at extreme valuations ({cv}). The classic late-cycle top setup — quiet and "
+            f"expensive, as in 2021. Watch the euphoria and valuation flags closely.")
+    if lo_vol and cheap:
+        return ("🟢", "Calm and cheap", "var(--green)",
+            f"Low volatility ({rv}) and low valuations ({cv}) — the healthiest backdrop for steady accumulation.")
+    return ("⚪", "Mixed", "var(--muted)",
+        f"{rv}, {cv}. No clear volatility×valuation extreme — read the individual signals above.")
+
+
 def _cond(signal, threshold, today_val, met, neutral=False):
     if neutral:
         color, icon = "var(--muted)", "·"
@@ -985,6 +1017,13 @@ body{{
   <div class="reg-summary" style="border-color:{_rvol_color((qrv_p+srv_p)/2) if (qrv_p is not None and srv_p is not None) else 'var(--border)'};color:var(--ink);margin-top:12px">
     {_rvol_interpretation(regime, qrv_p, srv_p)}
   </div>
+  {(lambda s: f'''
+  <div class="card" style="margin-top:12px;border-left:3px solid {s[2]}">
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{s[2]};margin-bottom:6px">
+      {s[0]} Volatility × Valuation · {s[1]}
+    </div>
+    <div style="font-size:13px;line-height:1.7;color:var(--ink)">{s[3]}</div>
+  </div>''' if s else '')(_vol_valuation_signal(qrv_p, cape, pt["scores"]["cape"]))}
 
   <div class="sec-title" style="margin-top:24px">💡 Investment Tips · Hard-Won Wisdom</div>
   <div class="tips-grid">

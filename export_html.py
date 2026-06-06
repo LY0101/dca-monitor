@@ -97,6 +97,60 @@ def _render_tips() -> str:
     return blocks
 
 
+def _rvol_color(pct):
+    if pct is None:        return "var(--muted)"
+    if pct < 33:           return "var(--green)"
+    if pct < 66:           return "var(--amber)"
+    if pct < 90:           return "var(--red)"
+    return "var(--purple)"
+
+def _rvol_word(pct):
+    if pct is None:  return "N/A"
+    if pct < 33:     return "Calm"
+    if pct < 66:     return "Normal"
+    if pct < 90:     return "Elevated"
+    return "Extreme"
+
+def _rvol_card(name, rvol, pct):
+    c = _rvol_color(pct)
+    rv_s  = f"{rvol:.0f}%" if rvol is not None else "N/A"
+    pct_s = f"{pct:.0f}th pctile" if pct is not None else "—"
+    barw  = pct if pct is not None else 0
+    return f"""
+    <div class="card" style="flex:1">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600">{name} · 1-month realized vol</div>
+        <div style="font-size:10px;font-weight:700;color:{c};text-transform:uppercase;letter-spacing:.5px">{_rvol_word(pct)}</div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px">
+        <div style="font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:{c}">{rv_s}</div>
+        <div style="font-size:11px;color:var(--muted)">annualized · {pct_s} of all history</div>
+      </div>
+      <div class="sig-bar-track" style="height:6px"><div class="sig-bar-fill" style="width:{barw}%;background:{c}"></div></div>
+    </div>"""
+
+def _rvol_interpretation(regime, qpct, spct):
+    if qpct is None or spct is None:
+        return "Realized-volatility data unavailable this run."
+    avg = (qpct + spct) / 2
+    gap = spct - qpct
+    if avg >= 66:
+        base = ("Actual price swings are <strong>elevated</strong> — and high realized volatility is exactly when "
+                "leveraged ETFs bleed the most to decay. This reinforces staying OUT of TQQQ/SOXL.")
+        if regime in ("bull", "euphoria"):
+            base += " It also sits oddly against a low-VIX read: the market is moving a lot even while option-implied fear is muted."
+    elif avg < 33:
+        base = ("Markets are genuinely <strong>calm</strong> — small actual price swings, the friendliest tape for holding leverage.")
+        if regime in ("bull", "euphoria"):
+            base += " But calm + cheap options (low VIX) is also the classic complacency setup — watch the euphoria/valuation flags."
+    else:
+        base = "Realized volatility is in its <strong>normal</strong> historical range — neither calm nor stressed."
+    if gap >= 25:
+        base += (f" Semiconductors (SMH, {spct:.0f}th pctile) are far more turbulent than the broad Nasdaq (QQQ, {qpct:.0f}th) — "
+                 "a specific warning against SOXL, the 3× semis fund.")
+    return base
+
+
 def _cond(signal, threshold, today_val, met, neutral=False):
     if neutral:
         color, icon = "var(--muted)", "·"
@@ -227,6 +281,8 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     pe      = d.get("qqq_pe_fwd")
     cape    = d.get("cape")
     tg      = d.get("tqqq_gain_pct")
+    qrv     = d.get("qqq_rvol");  qrv_p = d.get("qqq_rvol_pct")
+    srv     = d.get("smh_rvol");  srv_p = d.get("smh_rvol_pct")
     n_hist  = len(history)
 
     consec = 0
@@ -919,6 +975,15 @@ body{{
   <div class="card">
     <div class="sig-list">{regime_sigs}</div>
     <div class="reg-summary" style="border-color:{rc};color:{rc}">{reg_summary}</div>
+  </div>
+
+  <div class="sec-title" style="margin-top:24px">Realized Volatility <span style="color:var(--light);font-weight:400;letter-spacing:0">· actual price movement vs VIX's implied fear</span></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    {_rvol_card("QQQ", qrv, qrv_p)}
+    {_rvol_card("SMH", srv, srv_p)}
+  </div>
+  <div class="reg-summary" style="border-color:{_rvol_color((qrv_p+srv_p)/2) if (qrv_p is not None and srv_p is not None) else 'var(--border)'};color:var(--ink);margin-top:12px">
+    {_rvol_interpretation(regime, qrv_p, srv_p)}
   </div>
 
   <div class="sec-title" style="margin-top:24px">💡 Investment Tips · Hard-Won Wisdom</div>

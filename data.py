@@ -1,4 +1,6 @@
 import re
+import numpy as np
+import pandas as pd
 import yfinance as yf
 import pandas_ta as ta
 import requests
@@ -67,6 +69,10 @@ def fetch_all() -> dict:
     qqq_pe_fwd = _fetch_pe()
     cape       = _fetch_cape()
 
+    # ── realized volatility + historical percentile ──
+    qqq_rvol, qqq_rvol_pct = _realized_vol_pctile("QQQ")
+    smh_rvol, smh_rvol_pct = _realized_vol_pctile("SMH")
+
     return {
         # prices
         "qqq_price":       round(qqq_price, 2),
@@ -87,6 +93,11 @@ def fetch_all() -> dict:
         "qqq_pe_fwd":      qqq_pe_fwd,
         "cape":            cape,
         "tqqq_gain_pct":   round(tqqq_gain, 1) if tqqq_gain is not None else None,
+        # realized volatility (annualized 1-month) + percentile vs full history
+        "qqq_rvol":        qqq_rvol,
+        "qqq_rvol_pct":    qqq_rvol_pct,
+        "smh_rvol":        smh_rvol,
+        "smh_rvol_pct":    smh_rvol_pct,
     }
 
 
@@ -180,6 +191,28 @@ def _fetch_pe() -> float | None:
         pass
 
     return None   # will show as "N/A" in report — enter manually if needed
+
+
+def _realized_vol_pctile(tkr: str, window: int = 21) -> tuple:
+    """
+    Annualized 1-month (21 trading day) realized volatility of `tkr`, plus its
+    percentile rank against the FULL history of that ticker since inception.
+    Returns (current_rvol_pct, percentile) or (None, None) on failure.
+    """
+    try:
+        s = yf.download(tkr, period="max", auto_adjust=True, progress=False)["Close"]
+        if isinstance(s, pd.DataFrame):
+            s = s.squeeze()
+        s = s.dropna()
+        ret = np.log(s / s.shift(1))
+        rv  = (ret.rolling(window).std() * np.sqrt(252) * 100).dropna()
+        if rv.empty:
+            return None, None
+        cur = float(rv.iloc[-1])
+        pct = float((rv < cur).mean() * 100)
+        return round(cur, 1), round(pct)
+    except Exception:
+        return None, None
 
 
 def _fetch_cape() -> float | None:

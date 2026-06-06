@@ -129,6 +129,16 @@ def section_regime_indicators(d: dict) -> Panel:
          pct(d["smh_rs_gap"]),
          ("✅ Semi leading", "green") if d["smh_rs_gap"] > -3
          else ("⚠️  Semi lagging", "yellow")),
+
+        ("QQQ realized vol (1M)",
+         f"{d['qqq_rvol']}% ({d['qqq_rvol_pct']:.0f}th pct)" if d.get("qqq_rvol") is not None else "N/A",
+         ("✅ Calm/normal", "green") if (d.get("qqq_rvol_pct") or 0) < 66
+         else ("⚠️  Elevated", "yellow")),
+
+        ("SMH realized vol (1M)",
+         f"{d['smh_rvol']}% ({d['smh_rvol_pct']:.0f}th pct)" if d.get("smh_rvol") is not None else "N/A",
+         ("✅ Calm/normal", "green") if (d.get("smh_rvol_pct") or 0) < 66
+         else ("⚠️  Elevated", "yellow")),
     ]
 
     for label, val, (status, color) in rows:

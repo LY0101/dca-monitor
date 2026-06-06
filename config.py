@@ -57,16 +57,18 @@ CONFIRM = {
     "to_fear1":    1,
     "to_chop":     1,
     "to_bull":     2,   # prevents FOMO re-entry
-    "to_euphoria": 2,   # 2 months of signals before declaring overheated
+    "to_euphoria": 1,   # fast caution flag — raise quickly when overheated
 }
 
 # ── EUPHORIA THRESHOLDS — multi-signal, need 3 of 4 ──────────
 
+# Calibrated against 2000–2026 weekly history to fire on ~1% of weeks,
+# clustering at complacent melt-up tops (Jan 2018, Jan 2020, Jul 2024).
 EUPHORIA_THRESHOLDS = {
-    "vix_max":         15.0,  # VIX below this (extreme complacency)
-    "above_200ma_min": 25.0,  # QQQ this % above 200-day MA
-    "rsi_min":         72.0,  # RSI 35-day above this
-    "ret_12m_min":     45.0,  # 12-month QQQ return above this
+    "vix_max":         16.0,  # VIX below this (complacency)
+    "above_200ma_min": 18.0,  # QQQ this % above 200-day MA
+    "rsi_min":         70.0,  # RSI 35-day above this
+    "ret_12m_min":     30.0,  # 12-month QQQ return above this
 }
 EUPHORIA_SIGNALS_REQUIRED = 3   # of the 4 above
 

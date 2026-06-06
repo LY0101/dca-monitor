@@ -64,6 +64,15 @@ INVESTMENT_TIPS = [
     ("Discipline", "var(--green)",
      "Beware the backtest — it only saw the good years",
      "TQQQ/SOXL launched in 2010, the best tech window ever. A 3× Nasdaq through 2000–02 was a near-total loss. Size for the regime you haven't seen."),
+    ("Discipline", "var(--green)",
+     "Hysteresis: slow to get aggressive, fast to get defensive",
+     "Confirmation months stop you chasing FOMO into leverage; fear regimes switch immediately. Asymmetry by design."),
+    ("Timing", "var(--purple)",
+     "Euphoria can last for months — don't short the top",
+     "Overheated ≠ imminent crash. Pause new buys and trim into strength; never bet against a melt-up with leverage."),
+    ("Leverage", "var(--amber)",
+     "Skip the daily circuit breaker",
+     "Single-day stops whipsaw viciously on 3× ETFs, and you can't execute intraday on a framework you check once a day."),
 ]
 
 

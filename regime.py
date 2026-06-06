@@ -54,7 +54,7 @@ def decide_regime(raw: str, history: list[str]) -> str:
       fear1    → 1 month confirmation
       chop     → 1 month from bull/euphoria; 2 months from fear
       bull     → 2 months; cannot come directly from fear
-      euphoria → 2 months from bull; drops back to bull in 1 month
+      euphoria → fast caution flag (1 month); raised when overheated, not from fear
     """
     if not history:
         return "chop"   # safe default on first run
@@ -87,15 +87,12 @@ def decide_regime(raw: str, history: list[str]) -> str:
             return "bull"
         return "chop"
 
-    # Euphoria: 2 months from bull; only reachable from bull/euphoria
+    # Euphoria: FAST caution flag — raise as soon as overheating appears in the
+    # bull/chop zone. Don't jump straight out of fear (let the trend normalize).
     if raw == "euphoria":
-        if prev == "euphoria":
-            return "euphoria"       # already confirmed
-        if prev == "bull":
-            # Need the month before also to have been bull or euphoria
-            if len(history) >= 2 and history[-2] in ("bull", "euphoria"):
-                return "euphoria"
-        return "bull"               # not enough confirmation yet
+        if prev in ("euphoria", "bull", "chop"):
+            return "euphoria"
+        return prev                 # coming from fear — wait for normalization
 
     return "chop"
 

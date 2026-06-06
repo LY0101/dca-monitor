@@ -486,6 +486,100 @@ def _render_backtest(s) -> str:
     """
 
 
+BEHAVIORAL = [
+  ("var(--red)", "“I'll wait for a better entry” (market-timing)",
+   "The most common DCA killer — skipping months to wait for a dip or 'more clarity.' You end up timing the market (the exact thing DCA removes) and usually buy less, later, and higher.",
+   "Automate it. Set a recurring auto-invest at your broker on a fixed date (say the 1st). Make the monthly buy a default that happens without a decision — willpower is unreliable, a standing order isn't."),
+  ("var(--red)", "Panic-selling in a drawdown (loss aversion)",
+   "This strategy has historically fallen ~80% peak-to-trough. In the moment every instinct screams sell — and selling near the bottom turns a paper drawdown into a permanent loss. It's the single biggest gap between backtest and real results.",
+   "Pre-commit on paper, while calm: 'I will not sell leveraged positions in a drawdown; I keep buying on schedule.' Decide your −50% and −80% response NOW, not at the bottom. A written rule beats in-the-moment emotion."),
+  ("var(--amber)", "FOMO / doubling down after a run-up",
+   "After a big rally it feels safest to add more leverage — exactly when valuations and euphoria signals are highest and forward returns are worst. That's buying the most shares at the worst prices.",
+   "Never increase the leverage sleeve after a strong run. Let the Euphoria and Valuation-Warning flags be your 'stop adding leverage' trigger — new money in those months goes to the unleveraged sleeve, never more 3×."),
+  ("var(--amber)", "Checking too often (action bias + anxiety)",
+   "A 3× strategy watched daily maximizes stress and the urge to tinker. Most actions taken from daily monitoring are noise that quietly erodes returns.",
+   "Downgrade to a monthly ritual: run the dashboard once a month, act, close it. The framework is monthly by design — daily watching adds anxiety, not return."),
+  ("var(--purple)", "Recency bias / overconfidence",
+   "The backtest is the best-case decade for leveraged tech, with no secular bear. After wins it's tempting to size up and assume it continues — which is how leverage ruins people in the regime that hasn't happened yet.",
+   "Anchor to the worst case, not the recent past. Size the sleeve so you could survive a near-total loss of it, and rebalance back down after gains (the 25% cap) rather than letting winners run."),
+  ("var(--green)", "Skipping contributions when scared",
+   "Fear peaks exactly when prices are lowest — so the months you most want to skip are the months DCA pays off most (Fear I/II buy the cheapest shares of the whole cycle).",
+   "Remove the choice — automate the contribution so fear can't intervene. If you must act manually, schedule the transfer before you read the news, not after."),
+  ("var(--green)", "Mental accounting (judging the sleeve alone)",
+   "Looking at the leveraged sleeve in isolation makes an −80% drop feel catastrophic — and that feeling is what triggers the panic sell.",
+   "Always view it as a % of total liquid net worth against your safe T-bill core. A properly-sized sleeve falling 80% is a survivable dent to the whole — that framing is what lets you hold."),
+]
+
+
+def _render_behavioral(bt) -> str:
+    # data-driven motivation: cost of missing the best months
+    timing_card = ""
+    if bt and bt.get("monthly"):
+        twrs = [r["twr"] / 100 for r in bt["monthly"]]
+        def grow(rs):
+            v = 1.0
+            for r in rs: v *= (1 + r)
+            return v
+        full = grow(twrs)
+        srt = sorted(twrs)
+        ex10 = grow(srt[:-10]) if len(srt) > 10 else full
+        drop = (1 - ex10 / full) * 100 if full else 0
+        dd = bt.get("strategy", {}).get("maxdd_pct")
+        worst = bt.get("strategy", {}).get("worst_mo")
+        timing_card = f"""
+        <div class="card" style="margin-bottom:12px;border-left:3px solid var(--ink)">
+          <div class="sec-title" style="margin-bottom:8px">Why consistency matters more than timing</div>
+          <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:baseline;margin-bottom:8px">
+            <div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800">${full:,.0f}</div>
+              <div style="font-size:10px;color:var(--muted)">$1 invested, time-weighted</div></div>
+            <div style="font-size:20px;color:var(--light)">→</div>
+            <div><div style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--red)">${ex10:,.0f}</div>
+              <div style="font-size:10px;color:var(--muted)">if you missed the 10 best months</div></div>
+            <div style="font-size:12px;color:var(--red);font-weight:700">−{drop:.0f}% of the entire result</div>
+          </div>
+          <div style="font-size:12px;line-height:1.7;color:var(--muted)">
+            Over {bt.get('months','~196')} months, almost the entire gain came from a handful of explosive months — and they
+            are impossible to predict (they often arrive right after the scariest drops). Sit out just the 10 best and you
+            forfeit <strong>{drop:.0f}%</strong> of the outcome. The only reliable way to be present for them is to
+            <strong>always be invested and always contribute</strong> — which is precisely what skipping DCA and panic-selling break.
+            {f"And remember the ride: a {dd}% max drawdown and a {worst}% worst month. Those WILL recur — plan for them now." if dd else ""}
+          </div>
+        </div>"""
+
+    bias_cards = "".join(
+        f"""<div class="card" style="margin-bottom:12px;border-left:3px solid {col}">
+              <div style="font-size:14px;font-weight:700;margin-bottom:6px">{title}</div>
+              <div style="font-size:12px;line-height:1.7;color:var(--muted);margin-bottom:8px"><strong style="color:var(--ink)">How it bites you:</strong> {bite}</div>
+              <div style="font-size:12px;line-height:1.7;color:var(--ink);padding:10px 12px;background:var(--s1);border-radius:8px"><strong style="color:{col}">The fix:</strong> {fix}</div>
+            </div>"""
+        for col, title, bite, fix in BEHAVIORAL)
+
+    checklist = """
+    <div class="card" style="margin-bottom:12px">
+      <div class="sec-title" style="margin-bottom:10px">Your commitment system (make discipline the default)</div>
+      <div style="font-size:12.5px;line-height:2;color:var(--ink)">
+        ☐ <strong>Automate the monthly buy</strong> — a standing order on a fixed date, so DCA isn't a monthly decision.<br>
+        ☐ <strong>Write your drawdown plan before you need it</strong> — "−50% and −80% = keep buying, don't sell." Sign it.<br>
+        ☐ <strong>Check monthly, not daily</strong> — one dashboard run on the 1st, act, close it.<br>
+        ☐ <strong>Size so you can sleep</strong> — cap the leveraged sleeve as a % of net worth (the sleep test).<br>
+        ☐ <strong>Keep a one-line monthly journal</strong> — date, amount, regime, how you felt. It builds accountability and a record of your own discipline.<br>
+        ☐ <strong>Never add leverage after a run-up</strong> — let the Euphoria / Valuation flags veto it.
+      </div>
+    </div>"""
+
+    intro = """
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:13px;line-height:1.8;color:var(--ink)">
+        For a high-risk leveraged strategy, <strong>behavior is the strategy.</strong> The backtest's returns assume you
+        contributed every single month — <em>including</em> through an ~80% drawdown — and never sold in fear. The distance
+        between that and what most people actually do is enormous, and it's where the strategy's edge is won or lost.
+        The goal of this page: turn discipline into a <strong>system</strong> so it doesn't depend on willpower in the moment.
+      </div>
+    </div>"""
+
+    return intro + timing_card + '<div class="sec-title" style="margin-top:18px">Biases → corrections</div>' + bias_cards + checklist
+
+
 def _render_legend() -> str:
     out = ""
     for cat, items in LEGEND:
@@ -1375,6 +1469,7 @@ body{{
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
   <button class="ntab" onclick="tab('backtest-temp',this)">Backtest-temp</button>
+  <button class="ntab" onclick="tab('behavioral',this)">Behavioral</button>
   <button class="ntab" onclick="tab('tips',this)">Tips</button>
   <button class="ntab" onclick="tab('legend',this)">Legend</button>
 </div>
@@ -1388,6 +1483,7 @@ body{{
     <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
     <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
     <button class="mnav-btn" onclick="tabM('backtest-temp',this)"><div class="mnav-icon">🧪</div>Backtest-temp</button>
+    <button class="mnav-btn" onclick="tabM('behavioral',this)"><div class="mnav-icon">🧠</div>Behavioral</button>
     <button class="mnav-btn" onclick="tabM('tips',this)"><div class="mnav-icon">💡</div>Tips</button>
     <button class="mnav-btn" onclick="tabM('legend',this)"><div class="mnav-icon">📖</div>Legend</button>
   </div>
@@ -1947,6 +2043,12 @@ body{{
     </div>
   </div>
   {_render_backtest(_bt)}
+</div>
+
+<!-- ══════════ BEHAVIORAL ══════════ -->
+<div class="panel" id="panel-behavioral">
+  <div class="sec-title">Behavioral · Following DCA &amp; Beating Your Own Biases</div>
+  {_render_behavioral(_bt)}
 </div>
 
 <!-- ══════════ TIPS ══════════ -->

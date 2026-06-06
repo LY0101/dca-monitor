@@ -150,6 +150,7 @@ def section_profit_taking(d: dict, pt: dict) -> Panel:
 
     labels = {
         "qqq_pe_fwd":      ("QQQ Forward P/E",       f"{d.get('qqq_pe_fwd') or 'N/A'}×", "38× / 45× / 52×"),
+        "cape":            ("Shiller CAPE",           f"{d.get('cape') or 'N/A'}",         "28 / 34 / 40"),
         "rsi_35":          ("RSI 35-day",             f"{d['rsi']:.1f}",                   "78 / 83 / 88"),
         "above_200ma_pct": ("Above 200MA",            pct(d["above_200ma_pct"]),            "30% / 40% / 50%"),
         "vix_low":         ("VIX complacency",        f"{d['vix']:.1f}",                   "<13 / <11 / <10"),
@@ -165,7 +166,7 @@ def section_profit_taking(d: dict, pt: dict) -> Panel:
                   f"[{colors[sc]}]{icons[sc]}[/{colors[sc]}]")
 
     title = (f"Profit-Taking Monitor · "
-             f"[{color}]{level}[/{color}] · {firing}/6 signals")
+             f"[{color}]{level}[/{color}] · {firing}/7 signals")
     return Panel(t, title=title, border_style=color)
 
 

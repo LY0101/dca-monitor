@@ -76,11 +76,19 @@ EUPHORIA_SIGNALS_REQUIRED = 3   # of the 4 above
 
 PROFIT_THRESHOLDS = {
     "qqq_pe_fwd":      (38,  45,  52),   # Nasdaq-100 forward P/E
+    "cape":            (28,  34,  40),   # Shiller CAPE: 90th/95th/99th pctile (dot-com=44)
     "rsi_35":          (78,  83,  88),   # QQQ 35-day RSI
     "above_200ma_pct": (30,  40,  50),   # % QQQ above 200-day SMA
     "vix_low":         (13,  11,  10),   # inverted: LOW VIX = complacency
     "return_12m_pct":  (50,  65,  80),   # QQQ 12-month return %
     "tqqq_gain_pct":   (200, 400, 700),  # TQQQ unrealized gain from cost %
 }
+
+# ── VALUATION WARNING — P/E + CAPE, weighted heavier than momentum ───
+# The dot-com top was a VALUATION bubble at high VIX, so momentum/euphoria
+# signals miss it. This VIX-independent warning catches it.
+# Level = worst of {QQQ P/E score, CAPE score}. A "Bubble" reading alone is
+# enough to escalate the profit-taking action to at least CAUTION.
+VALUATION_LABELS = ("Normal", "Elevated", "Extreme", "Bubble")
 
 HISTORY_FILE = "history.csv"

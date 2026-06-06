@@ -267,7 +267,7 @@ body{
 <div class="topbar">
   <div class="topbar-logo">DCA<span>·</span>Monitor</div>
   <div class="topbar-right">
-    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-06 10:10</div>
+    <div class="live-dot"><div class="dot"></div>Updated: 2026-06-06 10:24</div>
     <button class="refresh-btn" id="refresh-btn" onclick="refreshPage()" title="Reload page (R)">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       Refresh <span style="color:var(--light);font-size:10px;margin-left:2px">[R]</span>
@@ -330,15 +330,27 @@ body{
   </div>
 
   <div class="sec-title">Profit-Taking Status</div>
-  <div class="alert-banner hold">
+  <div class="alert-banner caution">
     <div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:4px;">✅ Hold · 0 of 6 signals elevated</div>
-      <div style="font-size:14px;font-weight:600;margin-bottom:3px;">No selling — continue DCA as normal</div>
-      <div style="font-size:12px;color:var(--muted);">No action. Continue DCA as normal.</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px;">🔴 Caution · 1 of 6 signals firing</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:3px;">Trim 15–25% of SOXL first, then TQQQ proportionally</div>
+      <div style="font-size:12px;color:var(--muted);">Trim 15–25% of SOXL first, then TQQQ proportionally. Confirm 3 consecutive weeks before executing. Proceeds → money market (Fear II reserve).</div>
     </div>
     <div style="text-align:center;padding-left:24px;flex-shrink:0;">
-      <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--green);line-height:1;">0/6</div>
+      <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:var(--red);line-height:1;">1/7</div>
       <div style="font-size:10px;color:var(--muted);">signals</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Valuation Warning <span style="color:var(--light);font-weight:400;letter-spacing:0">· catches valuation bubbles that momentum misses (e.g. 2000)</span></div>
+  <div class="alert-banner extreme">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--purple);margin-bottom:4px;">🟣 Valuation Warning · BUBBLE</div>
+      <div style="font-size:13px;line-height:1.7;color:var(--ink);max-width:680px;">⚠️ BUBBLE valuation. Shiller CAPE 41.6 sits near dot-com extremes (the 2000 peak was 44, the all-time high). This is the gauge that caught the dot-com top. Pause new buying and trim leverage into strength — not because a crash is imminent, but because forward returns from here are historically poor and the downside is large.</div>
+    </div>
+    <div style="text-align:center;padding-left:24px;flex-shrink:0;">
+      <div style="font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:var(--purple);line-height:1;">41.6</div>
+      <div style="font-size:10px;color:var(--muted);">CAPE · P/E 31.5×</div>
     </div>
   </div>
 
@@ -920,14 +932,14 @@ body{
     </div>
   </div>
 
-  <div class="alert-banner hold" style="margin-bottom:20px">
+  <div class="alert-banner caution" style="margin-bottom:20px">
     <div>
-      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:4px">✅ Hold · 0 of 6 signals elevated</div>
-      <div style="font-size:15px;font-weight:600;margin-bottom:4px">No selling — continue DCA as normal</div>
-      <div style="font-size:12px;color:var(--muted)">No action. Continue DCA as normal.</div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:4px">🔴 Caution · 1 of 6 signals firing</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">Trim 15–25% of SOXL first, then TQQQ proportionally</div>
+      <div style="font-size:12px;color:var(--muted)">Trim 15–25% of SOXL first, then TQQQ proportionally. Confirm 3 consecutive weeks before executing. Proceeds → money market (Fear II reserve).</div>
     </div>
     <div style="padding-left:20px;flex-shrink:0;text-align:center">
-      <div style="font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--green);line-height:1">0/6</div>
+      <div style="font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:var(--red);line-height:1">1/7</div>
       <div style="font-size:10px;color:var(--muted)">signals</div>
     </div>
   </div>
@@ -946,8 +958,8 @@ body{
         <div style="font-weight:700;margin-bottom:4px">Step 2 — Count how many are firing (≥1)</div>
         <span style="color:var(--green)">0–1 firing → HOLD</span> — continue DCA as normal<br>
         <span style="color:var(--amber)">2–3 firing → WATCH</span> — pause new SOXL DCA only<br>
-        <span style="color:var(--red)">4–5 firing → CAUTION</span> — trim 15–25% of SOXL, then TQQQ<br>
-        <span style="color:var(--purple)">6 firing → EXTREME</span> — trim 40–60% of all leveraged
+        <span style="color:var(--red)">4–6 firing → CAUTION</span> — trim 15–25% of SOXL, then TQQQ<br>
+        <span style="color:var(--purple)">7 firing → EXTREME</span> — trim 40–60% of all leveraged
       </div>
     </div>
     <div style="margin-top:14px;padding:10px 14px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:4px;font-size:12px;line-height:1.8;color:var(--ink)">
@@ -967,6 +979,16 @@ body{
         <div class="sig-val">31.5×</div>
         <div class="sig-sub">38× · 45× · 52×</div>
         <div class="sig-status"><span class='badge bg'>Normal</span></div>
+      </div>
+      <div class="sig-row pt-sig-row">
+        <div class="sig-name-block">
+          <div class="sig-name">Shiller CAPE (valuation)</div>
+          <div class="sig-desc">The cyclically-adjusted P/E of the S&P 500 — price ÷ 10-year inflation-adjusted average earnings. The gold-standard long-term bubble gauge: it smooths out the earnings cycle, so it can't be fooled by one good year. It hit an all-time-high of 44 right before the 2000 dot-com crash. This is the one signal that catches a VALUATION bubble even when volatility is high and momentum looks fine.</div>
+        </div>
+        <div class="sig-bar-track" style="margin-top:6px"><div class="sig-bar-fill" style="width:88.7%;background:var(--purple)"></div></div>
+        <div class="sig-val">41.6</div>
+        <div class="sig-sub">28 · 34 · 40</div>
+        <div class="sig-status"><span class='badge bp'>🟣 Bubble</span></div>
       </div>
       <div class="sig-row pt-sig-row">
         <div class="sig-name-block">
@@ -1050,6 +1072,7 @@ body{
       </tr></thead>
       <tbody>
         <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--green)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
+        <tr style="background:var(--s1)"><td><strong>Shiller CAPE (valuation ★)</strong></td><td class="r" style="color:var(--green)">below 28</td><td class="r">28+</td><td class="r">34+</td><td class="r">40+ (dot-com=44)</td></tr>
         <tr><td>RSI 35-day (QQQ daily closes)</td><td class="r" style="color:var(--green)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
         <tr><td>Distance above 200MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
         <tr>
@@ -1127,7 +1150,7 @@ body{
 
 </div><!-- /page -->
 
-<div class="footer">Last updated: 2026-06-06 10:10 &nbsp;·&nbsp; 1 month of regime history on record</div>
+<div class="footer">Last updated: 2026-06-06 10:24 &nbsp;·&nbsp; 1 month of regime history on record</div>
 
 <script>
 // ── injected live data ──

@@ -63,8 +63,9 @@ def fetch_all() -> dict:
     tqqq_cost = COST_BASIS.get("TQQQ", 0)
     tqqq_gain = ((tqqq_price / tqqq_cost) - 1) * 100 if tqqq_cost > 0 else None
 
-    # ── forward P/E (scraped) ──
+    # ── valuation (scraped) ──
     qqq_pe_fwd = _fetch_pe()
+    cape       = _fetch_cape()
 
     return {
         # prices
@@ -84,6 +85,7 @@ def fetch_all() -> dict:
         # profit-taking
         "return_12m_pct":  round(ret_12m, 1),
         "qqq_pe_fwd":      qqq_pe_fwd,
+        "cape":            cape,
         "tqqq_gain_pct":   round(tqqq_gain, 1) if tqqq_gain is not None else None,
     }
 
@@ -178,3 +180,24 @@ def _fetch_pe() -> float | None:
         pass
 
     return None   # will show as "N/A" in report — enter manually if needed
+
+
+def _fetch_cape() -> float | None:
+    """
+    Shiller CAPE (cyclically-adjusted P/E, PE10) for the S&P 500 — the canonical
+    long-term valuation / bubble gauge. Peaked at 44 before the 2000 dot-com bust.
+    Scraped live from multpl.com.
+    """
+    try:
+        r = requests.get("https://www.multpl.com/shiller-pe", timeout=10, headers=_HEADERS)
+        soup = BeautifulSoup(r.text, "html.parser")
+        el = soup.find("div", {"id": "current"})
+        if el:
+            m = re.search(r"(\d+\.?\d*)", el.get_text())
+            if m:
+                v = float(m.group(1))
+                if 5 < v < 100:
+                    return round(v, 1)
+    except Exception:
+        pass
+    return None

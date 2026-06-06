@@ -1,4 +1,4 @@
-from config import PROFIT_THRESHOLDS, COST_BASIS
+from config import PROFIT_THRESHOLDS, COST_BASIS, VALUATION_LABELS
 from data import PRICES_LIVE
 
 ALERT_MAP = {
@@ -9,7 +9,10 @@ ALERT_MAP = {
     4: "CAUTION",
     5: "CAUTION",
     6: "EXTREME",
+    7: "EXTREME",
 }
+
+ALERT_ORDER = ["HOLD", "WATCH", "CAUTION", "EXTREME"]
 
 ACTIONS = {
     "HOLD":    "No action. Continue DCA as normal.",
@@ -42,11 +45,13 @@ def _score(key: str, value, inverted: bool = False) -> int:
 
 def evaluate(data: dict) -> dict:
     """
-    Score all 6 profit-taking indicators.
-    Returns scores, firing count, alert level, and action string.
+    Score all 7 profit-taking indicators (incl. CAPE valuation).
+    Returns scores, firing count, the standalone Valuation Warning, the alert
+    level (escalated by an extreme valuation), and the action string.
     """
     scores = {
         "qqq_pe_fwd":      _score("qqq_pe_fwd",      data.get("qqq_pe_fwd")),
+        "cape":            _score("cape",             data.get("cape")),
         "rsi_35":          _score("rsi_35",           data["rsi"]),
         "above_200ma_pct": _score("above_200ma_pct",  data["above_200ma_pct"]),
         "vix_low":         _score("vix_low",          data["vix"],  inverted=True),
@@ -54,11 +59,26 @@ def evaluate(data: dict) -> dict:
         "tqqq_gain_pct":   _score("tqqq_gain_pct",    data.get("tqqq_gain_pct")),
     }
     firing      = sum(1 for s in scores.values() if s >= 1)
-    alert_level = ALERT_MAP.get(firing, "EXTREME")
+    base_alert  = ALERT_MAP.get(firing, "EXTREME")
+
+    # ── Valuation Warning: worst of P/E and CAPE, weighted heavier ──
+    val_score = max(scores["qqq_pe_fwd"], scores["cape"])
+    valuation = {
+        "score": val_score,
+        "label": VALUATION_LABELS[val_score],
+        "pe":    data.get("qqq_pe_fwd"),
+        "cape":  data.get("cape"),
+    }
+    # Larger weight: a Bubble valuation alone forces >= CAUTION,
+    # an Extreme valuation forces >= WATCH — independent of the other signals.
+    val_floor = {3: "CAUTION", 2: "WATCH"}.get(val_score, "HOLD")
+    alert_level = max([base_alert, val_floor], key=ALERT_ORDER.index)
 
     return {
         "scores":      scores,
         "firing":      firing,
+        "valuation":   valuation,
+        "base_alert":  base_alert,
         "alert_level": alert_level,
         "action":      ACTIONS[alert_level],
     }

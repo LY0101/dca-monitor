@@ -107,7 +107,7 @@ def _cond(signal, threshold, today_val, met, neutral=False):
 
 def _headline(regime, budget, raw):
     if regime == "euphoria":
-        return "Stop new DCA — market is overheated. Let existing positions run and monitor for profit-taking signals."
+        return "Overheated — pause new DCA, divert this month's cash to your reserve, and trim leverage slowly into strength."
     if regime == "bull":
         return f"Deploy ${budget:,} this month into TQQQ + SOXL"
     if regime == "chop" and raw == "bull":
@@ -124,13 +124,12 @@ def _headline(regime, budget, raw):
 def _desc(d, regime, raw, n):
     vix = d["vix"]
     if regime == "euphoria":
-        t = EUPHORIA_THRESHOLDS
-        return (f"Multiple overheating signals are firing simultaneously. "
-                f"VIX at {vix:.1f} signals extreme complacency, QQQ is {d['above_200ma_pct']:+.1f}% above its 200-day MA, "
-                f"RSI at {d['rsi']:.1f}, and the 12-month return is {d['return_12m_pct']:+.1f}%. "
-                f"Deploying new capital at these levels means buying at or near the peak with maximum leverage risk. "
-                f"Hold existing positions and use the Profit-Taking monitor to guide any trimming. "
-                f"When euphoria ends and signals normalize, the framework resumes Bull DCA automatically.")
+        return (f"A complacent melt-up: VIX {vix:.1f} (low/complacent), QQQ {d['above_200ma_pct']:+.1f}% above its 200-day MA, "
+                f"RSI {d['rsi']:.1f}, 12-month return {d['return_12m_pct']:+.1f}%. This is a fast caution flag — overheating, "
+                f"not a crash call. Markets can stay euphoric for months, so do NOT short the top. Instead: "
+                f"(1) pause new DCA — divert this month's budget to your T-bill reserve, building dry powder for the next Fear II; "
+                f"(2) trim leveraged positions slowly into strength (SOXL first, then TQQQ) if the Profit-Taking or Valuation "
+                f"warnings are also elevated; (3) never sell QQQ. The framework resumes Bull DCA automatically once signals cool.")
     if regime == "bull":
         return (f"VIX at {vix:.1f} is well below the 20 threshold. QQQ is "
                 f"{d['above_200ma_pct']:+.1f}% above its 200-day moving average and RSI at "
@@ -223,6 +222,7 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     smh_gap = d["smh_rs_gap"]
     ret12m  = d["return_12m_pct"]
     pe      = d.get("qqq_pe_fwd")
+    cape    = d.get("cape")
     tg      = d.get("tqqq_gain_pct")
     n_hist  = len(history)
 
@@ -356,6 +356,7 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
 
     # ── profit-taking signal rows ──
     pe_v   = f"{pe}×" if pe else "N/A"
+    cape_v = f"{cape}" if cape else "N/A"
     tg_v   = _p(tg) if tg else "No cost basis set"
 
     pt_sigs = (
@@ -365,6 +366,12 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
                     "Elevated readings mean the market is priced for perfection — any earnings miss hits hard. "
                     "Dot-com peak (2000): 54×. Note: thresholds were calibrated for forward P/E; use this as a directional signal.",
                     _bar(pe,15,60)if pe else 0, scores["qqq_pe_fwd"], pe_v, "38× · 45× · 52×") +
+        _pt_sig_row("Shiller CAPE (valuation)",
+                    "The cyclically-adjusted P/E of the S&P 500 — price ÷ 10-year inflation-adjusted average earnings. "
+                    "The gold-standard long-term bubble gauge: it smooths out the earnings cycle, so it can't be "
+                    "fooled by one good year. It hit an all-time-high of 44 right before the 2000 dot-com crash. "
+                    "This is the one signal that catches a VALUATION bubble even when volatility is high and momentum looks fine.",
+                    _bar(cape,15,45)if cape else 0, scores["cape"], cape_v, "28 · 34 · 40") +
         _pt_sig_row("RSI 35-day (QQQ)",
                     "QQQ's Relative Strength Index calculated on 35 trading days of daily closing prices. "
                     "RSI measures how fast and how much QQQ has risen vs fallen recently, on a 0–100 scale. "
@@ -418,6 +425,27 @@ def generate_html(d, regime, alloc, budget, pt, raw, history) -> str:
     }
     pt_eyebrow  = pt_eyebrow_map[pt["alert_level"]]
     pt_hl       = pt_headline_map[pt["alert_level"]]
+
+    # ── valuation warning display ──
+    val        = pt["valuation"]
+    val_score  = val["score"]
+    val_label  = val["label"]
+    val_color  = ["var(--green)","var(--amber)","var(--red)","var(--purple)"][val_score]
+    val_cls    = ["hold","watch","caution","extreme"][val_score]
+    cape_disp  = f"{cape:.1f}" if cape else "N/A"
+    pe_disp    = f"{pe:.1f}×" if pe else "N/A"
+    val_msg = {
+        3: (f"⚠️ BUBBLE valuation. Shiller CAPE {cape_disp} sits near dot-com extremes "
+            f"(the 2000 peak was 44, the all-time high). This is the gauge that caught the dot-com top. "
+            f"Pause new buying and trim leverage into strength — not because a crash is imminent, but because "
+            f"forward returns from here are historically poor and the downside is large."),
+        2: (f"Valuations EXTREME. CAPE {cape_disp} is in the top 5% of 150+ years of history. "
+            f"Crash risk is elevated; favor caution over fresh leverage."),
+        1: (f"Valuations ELEVATED. CAPE {cape_disp} is above the 90th percentile — rich, but not yet bubble territory."),
+        0: (f"Valuations normal. CAPE {cape_disp}, QQQ P/E {pe_disp} — no valuation warning."),
+    }[val_score]
+    val_eyebrow = {3:"🟣 Valuation Warning · BUBBLE", 2:"🔴 Valuation Warning · EXTREME",
+                   1:"🟡 Valuation Warning · ELEVATED", 0:"✅ Valuation · Normal"}[val_score]
 
     # ── regime tab entry conditions ──
     bull_conds = (
@@ -788,8 +816,20 @@ body{{
       <div style="font-size:12px;color:var(--muted);">{pt["action"]}</div>
     </div>
     <div style="text-align:center;padding-left:24px;flex-shrink:0;">
-      <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:{ac};line-height:1;">{fire}/6</div>
+      <div style="font-family:'Syne',sans-serif;font-size:40px;font-weight:800;color:{ac};line-height:1;">{fire}/7</div>
       <div style="font-size:10px;color:var(--muted);">signals</div>
+    </div>
+  </div>
+
+  <div class="sec-title">Valuation Warning <span style="color:var(--light);font-weight:400;letter-spacing:0">· catches valuation bubbles that momentum misses (e.g. 2000)</span></div>
+  <div class="alert-banner {val_cls}">
+    <div>
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{val_color};margin-bottom:4px;">{val_eyebrow}</div>
+      <div style="font-size:13px;line-height:1.7;color:var(--ink);max-width:680px;">{val_msg}</div>
+    </div>
+    <div style="text-align:center;padding-left:24px;flex-shrink:0;">
+      <div style="font-family:'Syne',sans-serif;font-size:34px;font-weight:800;color:{val_color};line-height:1;">{cape_disp}</div>
+      <div style="font-size:10px;color:var(--muted);">CAPE · P/E {pe_disp}</div>
     </div>
   </div>
 
@@ -1145,7 +1185,7 @@ body{{
       <div style="font-size:12px;color:var(--muted)">{pt["action"]}</div>
     </div>
     <div style="padding-left:20px;flex-shrink:0;text-align:center">
-      <div style="font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:{ac};line-height:1">{fire}/6</div>
+      <div style="font-family:'Syne',sans-serif;font-size:44px;font-weight:800;color:{ac};line-height:1">{fire}/7</div>
       <div style="font-size:10px;color:var(--muted)">signals</div>
     </div>
   </div>
@@ -1164,8 +1204,8 @@ body{{
         <div style="font-weight:700;margin-bottom:4px">Step 2 — Count how many are firing (≥1)</div>
         <span style="color:var(--green)">0–1 firing → HOLD</span> — continue DCA as normal<br>
         <span style="color:var(--amber)">2–3 firing → WATCH</span> — pause new SOXL DCA only<br>
-        <span style="color:var(--red)">4–5 firing → CAUTION</span> — trim 15–25% of SOXL, then TQQQ<br>
-        <span style="color:var(--purple)">6 firing → EXTREME</span> — trim 40–60% of all leveraged
+        <span style="color:var(--red)">4–6 firing → CAUTION</span> — trim 15–25% of SOXL, then TQQQ<br>
+        <span style="color:var(--purple)">7 firing → EXTREME</span> — trim 40–60% of all leveraged
       </div>
     </div>
     <div style="margin-top:14px;padding:10px 14px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:4px;font-size:12px;line-height:1.8;color:var(--ink)">
@@ -1208,6 +1248,7 @@ body{{
       </tr></thead>
       <tbody>
         <tr><td>QQQ P/E (trailing)</td><td class="r" style="color:var(--green)">below 38×</td><td class="r">38×+</td><td class="r">45×+</td><td class="r">52×+</td></tr>
+        <tr style="background:var(--s1)"><td><strong>Shiller CAPE (valuation ★)</strong></td><td class="r" style="color:var(--green)">below 28</td><td class="r">28+</td><td class="r">34+</td><td class="r">40+ (dot-com=44)</td></tr>
         <tr><td>RSI 35-day (QQQ daily closes)</td><td class="r" style="color:var(--green)">below 78</td><td class="r">78+</td><td class="r">83+</td><td class="r">88+</td></tr>
         <tr><td>Distance above 200MA</td><td class="r" style="color:var(--green)">below 30%</td><td class="r">30%+</td><td class="r">40%+</td><td class="r">50%+</td></tr>
         <tr>

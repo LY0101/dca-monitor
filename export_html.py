@@ -195,6 +195,76 @@ def _load_backtest():
         return None
 
 
+def _render_equity_chart(curve) -> str:
+    """Inline SVG: growth of $1 (time-weighted, log scale), strategy vs B&H,
+    with the strategy's max-drawdown marked."""
+    if not curve or not curve.get("strat"):
+        return ""
+    import math
+    strat, bh, dates = curve["strat"], curve["bh"], curve["dates"]
+    n = len(strat)
+    W, H, L, R, T, Bm = 820, 360, 50, 16, 18, 30
+    pw, ph = W - L - R, H - T - Bm
+    allv = [v for v in strat + bh if v > 0]
+    lo = math.floor(math.log10(min(min(allv), 0.9)))
+    hi = math.ceil(math.log10(max(allv)))
+    def X(i): return L + (i / (n - 1)) * pw
+    def Y(v): return T + (hi - math.log10(max(v, 10 ** lo))) / (hi - lo) * ph
+    def poly(series): return " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(series))
+
+    # horizontal gridlines at each power of 10
+    grid = ""
+    for p in range(lo, hi + 1):
+        yy = Y(10 ** p)
+        lbl = f"${10**p:,.0f}" if p >= 0 else f"${10**p:g}"
+        grid += (f'<line x1="{L}" y1="{yy:.1f}" x2="{W-R}" y2="{yy:.1f}" stroke="#e8ebed" stroke-width="1"/>'
+                 f'<text x="{L-6}" y="{yy+3:.1f}" text-anchor="end" font-size="9" fill="#9ca3af">{lbl}</text>')
+    # year ticks
+    seen = set(); ticks = ""
+    for i, dt in enumerate(dates):
+        yr = dt[:4]
+        if yr not in seen and int(yr) % 2 == 0:
+            seen.add(yr)
+            xx = X(i)
+            ticks += (f'<line x1="{xx:.1f}" y1="{T}" x2="{xx:.1f}" y2="{T+ph}" stroke="#f1f3f5" stroke-width="1"/>'
+                      f'<text x="{xx:.1f}" y="{T+ph+14:.1f}" text-anchor="middle" font-size="9" fill="#9ca3af">{yr}</text>')
+
+    # strategy max drawdown (peak→trough on the strat curve)
+    peak = strat[0]; peak_i = 0; best_peak_i = 0; trough_i = 0; worst = 0.0; peak_at_worst = strat[0]
+    for i, v in enumerate(strat):
+        if v > peak:
+            peak, peak_i = v, i
+        dd = v / peak - 1
+        if dd < worst:
+            worst, trough_i, peak_at_worst, best_peak_i = dd, i, peak, peak_i
+    dd_mark = ""
+    if worst < -0.05:
+        xt = X(trough_i)
+        y_pk = Y(peak_at_worst); y_tr = Y(strat[trough_i])
+        dd_mark = (f'<line x1="{xt:.1f}" y1="{y_pk:.1f}" x2="{xt:.1f}" y2="{y_tr:.1f}" stroke="#dc2626" '
+                   f'stroke-width="1.5" stroke-dasharray="3,3"/>'
+                   f'<circle cx="{xt:.1f}" cy="{y_tr:.1f}" r="3.5" fill="#dc2626"/>'
+                   f'<text x="{xt+5:.1f}" y="{(y_pk+y_tr)/2:.1f}" font-size="10" font-weight="700" fill="#dc2626">'
+                   f'{worst*100:.0f}% drawdown</text>')
+
+    return f"""
+    <div class="card" style="margin-bottom:12px">
+      <div class="sec-title" style="margin-bottom:6px">Growth of $1 · time-weighted, log scale</div>
+      <div style="display:flex;gap:16px;margin-bottom:6px;font-size:11px">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:3px;background:#111827;display:inline-block;border-radius:2px"></span>Adaptive strategy</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:14px;height:3px;background:#9ca3af;display:inline-block;border-radius:2px"></span>Buy &amp; Hold QQQ</span>
+      </div>
+      <svg viewBox="0 0 {W} {H}" style="width:100%;height:auto;font-family:'IBM Plex Mono',monospace">
+        {grid}{ticks}
+        <polyline fill="none" stroke="#9ca3af" stroke-width="1.6" points="{poly(bh)}"/>
+        <polyline fill="none" stroke="#111827" stroke-width="2.2" points="{poly(strat)}"/>
+        {dd_mark}
+      </svg>
+      <div class="note">Each line is the growth of $1 invested in that strategy (contribution-neutral). Log scale — equal vertical
+      distance = equal % move, so the strategy's deeper dips are real risk, not just chart artefacts.</div>
+    </div>"""
+
+
 def _render_backtest(s) -> str:
     if not s:
         return ('<div class="card"><div style="color:var(--muted);font-size:13px;line-height:1.7">'
@@ -256,6 +326,8 @@ def _render_backtest(s) -> str:
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{verdict_color};margin-bottom:6px">Verdict</div>
       <div style="font-size:13px;line-height:1.8;color:var(--ink)">{verdict}</div>
     </div>
+
+    {_render_equity_chart(s.get("curve"))}
 
     <div class="card" style="margin-bottom:12px">
       <table class="tbl">

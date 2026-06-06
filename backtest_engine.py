@@ -305,6 +305,13 @@ def run():
         x *= (1 + r); bh_idx.append(x)
     bh = metrics("Buy & Hold QQQ", bh_twr, bh_nav_series[:-1].tolist(), bh_idx, bh_final, cfs)
 
+    # growth-of-$1 time-weighted equity curves (start at 1.0)
+    curve = {
+        "dates": [d.strftime("%Y-%m") for d in dates],
+        "strat": [round(v, 4) for v in ([1.0] + twr_idx)],
+        "bh":    [round(v, 4) for v in ([1.0] + bh_idx)],
+    }
+
     # regime distribution
     dist = df["Regime"].value_counts().to_dict()
 
@@ -317,6 +324,7 @@ def run():
         "strategy": strat, "bh": bh,
         "regime_distribution": {k: int(v) for k, v in dist.items()},
         "rf_annual": RF_ANNUAL,
+        "curve": curve,
     }
 
     _write_excel(df, summary)
@@ -376,7 +384,14 @@ def _write_excel(df, s):
         "QQQ P/E is unavailable historically, so the profit-taking monitor runs on its other 6 signals (incl. CAPE).",
     ]})
 
-    with pd.ExcelWriter(XLSX, engine="openpyxl") as xl:
+    out = XLSX
+    try:
+        open(out, "a").close()
+    except PermissionError:
+        out = XLSX.replace(".xlsx", "_new.xlsx")
+        print(f"  ({XLSX} is open/locked — writing to {out} instead)")
+
+    with pd.ExcelWriter(out, engine="openpyxl") as xl:
         df.to_excel(xl, sheet_name="Monthly", index=False)
         summ.to_excel(xl, sheet_name="Summary", index=False)
         dist.to_excel(xl, sheet_name="Summary", index=False, startrow=len(summ)+3)

@@ -79,6 +79,149 @@ INVESTMENT_TIPS = [
 ]
 
 
+_BANDCOLOR = {"green":"var(--green)","amber":"var(--amber)","red":"var(--red)",
+              "purple":"var(--purple)","orange":"var(--orange)","muted":"var(--muted)"}
+
+# ── INDICATOR LEGEND — how each metric works + what the values mean ──
+LEGEND = [
+  ("Volatility", [
+    {"name":"VIX — CBOE Volatility Index","tag":"implied volatility",
+     "what":"The market's expected 30-day volatility of the S&P 500, implied by options prices. Often called the 'fear gauge' — it rises when investors pay up for downside protection.",
+     "calc":"Derived live from S&P 500 option premiums. It is forward-looking (what traders EXPECT), not a measure of what already happened.",
+     "bands":[("Below 15","Complacency — very calm, little fear priced in","green"),
+              ("15 – 20","Normal bull-market range","green"),
+              ("20 – 30","Chop — rising caution","amber"),
+              ("30 – 45","Fear — panic conditions","red"),
+              ("Above 45","Extreme fear — crash / once-per-decade","purple")],
+     "use":"The hard boundary for the regime: <20 bull · 20–30 chop · 30–45 Fear I · >45 Fear II."},
+    {"name":"Realized Volatility (1-month)","tag":"actual volatility",
+     "what":"How much the price ACTUALLY moved over the last month — the real-world counterpart to VIX's expectation.",
+     "calc":"Standard deviation of the last 21 daily log returns, annualized (×√252). Shown as a percentile vs the ticker's full history.",
+     "bands":[("Below 33rd pctile","Calm — small actual swings","green"),
+              ("33rd – 66th","Normal historical range","amber"),
+              ("66th – 90th","Elevated — turbulent","red"),
+              ("Above 90th","Extreme — historic stress","purple")],
+     "use":"A leverage-decay gauge. High realized vol is when 3× ETFs bleed fastest. A big SMH-vs-QQQ gap warns specifically against SOXL."},
+  ]),
+  ("Trend & Momentum", [
+    {"name":"RSI — Relative Strength Index (35-day)","tag":"momentum · 0–100",
+     "what":"Measures how fast and how far price has risen vs fallen recently. High = overbought (gained a lot, fast); low = oversold.",
+     "calc":"Wilder's RSI over 35 trading days of QQQ closes. We use 35 (not the standard 14) to filter noise — better suited to monthly DCA.",
+     "bands":[("Below 30","Oversold — washed out","red"),
+              ("30 – 45","Weak momentum","amber"),
+              ("45 – 75","Healthy momentum","green"),
+              ("78 / 83 / 88","Overbought → profit-taking elevated / extreme / bubble","purple")],
+     "use":"Confirms bull health; one of the 7 profit-taking signals; part of the euphoria trigger (>70)."},
+    {"name":"MACD (12 / 26 / 9)","tag":"trend",
+     "what":"Moving Average Convergence Divergence — whether short-term momentum is accelerating above or below the longer trend.",
+     "calc":"MACD line = 12-day EMA − 26-day EMA. Signal line = 9-day EMA of the MACD line. Compared on QQQ.",
+     "bands":[("MACD line ABOVE signal","Bullish — upward momentum","green"),
+              ("MACD line BELOW signal","Bearish — downward momentum","red")],
+     "use":"A trend confirmation in the bull regime checklist."},
+    {"name":"200-day Moving Average (distance above)","tag":"trend",
+     "what":"The most-watched long-term trend line. How far price sits above/below it shows trend direction and how extended the market is.",
+     "calc":"200-day simple moving average of QQQ closes; distance = (price − MA) ÷ MA.",
+     "bands":[("Below 0%","Price under the MA — downtrend","red"),
+              ("0 – 30%","Normal, healthy uptrend","green"),
+              ("30% / 40% / 50%","Extended → profit-taking elevated / extreme / bubble","purple")],
+     "use":"Trend confirmation; euphoria trigger (>18%); profit-taking signal."},
+    {"name":"Drawdown from 52-week high","tag":"trend",
+     "what":"How far below its highest point in the past year the price has fallen.",
+     "calc":"(current price − highest close of trailing 252 days) ÷ that high.",
+     "bands":[("Above −10%","Near highs","green"),
+              ("−10% to −20%","Pullback","amber"),
+              ("−20% to −35%","Correction / bear","red"),
+              ("Below −35%","Deep bear","purple")],
+     "use":"Context for Fear regimes and the buy-the-panic thesis."},
+    {"name":"12-month return","tag":"momentum",
+     "what":"Total price change over the past year — the big-picture momentum read.",
+     "calc":"(price ÷ price 252 trading days ago) − 1, for QQQ.",
+     "bands":[("Negative","Down year","red"),
+              ("0 – 30%","Normal","green"),
+              ("50% / 65% / 80%","Stretched → profit-taking elevated / extreme / bubble","purple")],
+     "use":"Euphoria trigger (>30%); profit-taking signal."},
+  ]),
+  ("Valuation", [
+    {"name":"Shiller CAPE","tag":"valuation ★",
+     "what":"Cyclically-Adjusted P/E of the S&P 500 — the gold-standard long-term bubble gauge. Because it averages 10 years of earnings, one good year can't fool it.",
+     "calc":"Price ÷ average inflation-adjusted earnings over the prior 10 years. Scraped live from multpl.com.",
+     "bands":[("Below 28","Normal","green"),
+              ("28 – 34","Elevated (90th–95th pctile)","amber"),
+              ("34 – 40","Extreme (95th–99th)","red"),
+              ("Above 40","Bubble — dot-com peak was 44","purple")],
+     "use":"The Valuation Warning. VIX-independent, so it catches valuation bubbles (like 2000) that momentum/VIX miss. A Bubble reading alone forces ≥ CAUTION."},
+    {"name":"QQQ P/E (trailing)","tag":"valuation",
+     "what":"Price-to-earnings of the Nasdaq-100 — what you pay per dollar of the last year's earnings.",
+     "calc":"Trailing 12-month P/E from Yahoo Finance.",
+     "bands":[("Below 38×","Normal","green"),
+              ("38× / 45× / 52×","Elevated / extreme / bubble","purple")],
+     "use":"Second valuation input alongside CAPE."},
+  ]),
+  ("Relative Strength & Personal", [
+    {"name":"SMH vs QQQ (20-day RS)","tag":"relative strength",
+     "what":"Whether semiconductors are leading or lagging the broad Nasdaq over the last month — a risk-appetite tell.",
+     "calc":"SMH's 20-day return minus QQQ's 20-day return.",
+     "bands":[("Above −3%","Semis leading / neutral — healthy","green"),
+              ("Below −3%","Semis lagging — caution","amber")],
+     "use":"Confirms broad-market strength in the bull checklist."},
+    {"name":"TQQQ gain vs your cost basis","tag":"personal",
+     "what":"Your own unrealized gain on TQQQ — the only signal personal to your portfolio.",
+     "calc":"(current price ÷ your average cost) − 1. Set your cost basis in config.py.",
+     "bands":[("Below 200%","Normal","green"),
+              ("200% / 400% / 700%","Trim → elevated / extreme / bubble","purple")],
+     "use":"Profit-taking signal — locks in real gains after big leveraged run-ups."},
+  ]),
+]
+
+LEGEND_CONCEPTS = [
+  ("Implied vs Realized volatility",
+   "VIX is IMPLIED — what option prices say traders expect. Realized vol is ACTUAL — what already happened. When realized is high but VIX is low, the market is moving a lot without pricing in fear (a notable divergence)."),
+  ("Volatility decay (beta slippage)",
+   "3× ETFs reset their leverage daily. In choppy markets this 'constant-leverage trap' loses money even if the index ends flat: +25% then −20% returns the index to start, but a 3× fund drops ~30%. This is why the framework avoids leverage in chop and high realized vol."),
+  ("Percentile",
+   "Where today's reading ranks against the metric's entire history. '90th percentile' means it has only been this high 10% of the time — instantly tells you if a value is normal or extreme."),
+  ("Hysteresis",
+   "Confirmation delays that stop the regime flip-flopping on noise. The framework is slow to turn aggressive (bull needs 2 months) and fast to turn defensive (Fear is immediate)."),
+  ("Volatility × Valuation",
+   "The key synthesis: high vol + cheap = opportunity (2008); high vol + expensive = bubble bursting (2000); low vol + expensive = complacency/top (2021); low vol + cheap = healthy accumulation."),
+]
+
+
+def _render_legend() -> str:
+    out = ""
+    for cat, items in LEGEND:
+        out += f'<div class="sec-title" style="margin-top:22px">{cat}</div>'
+        for it in items:
+            rows = "".join(
+                f'<tr><td style="white-space:nowrap;font-weight:600">{v}</td>'
+                f'<td><span style="display:inline-block;width:7px;height:7px;border-radius:50%;'
+                f'background:{_BANDCOLOR[c]};margin-right:7px"></span>{m}</td></tr>'
+                for v, m, c in it["bands"])
+            out += f"""
+            <div class="card" style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px">
+                <div style="font-size:14px;font-weight:700">{it['name']}</div>
+                <div style="font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)">{it['tag']}</div>
+              </div>
+              <div style="font-size:12.5px;line-height:1.7;color:var(--ink);margin-top:8px">{it['what']}</div>
+              <div style="font-size:12px;line-height:1.7;color:var(--muted);margin-top:8px"><strong style="color:var(--ink)">How it's measured:</strong> {it['calc']}</div>
+              <table class="tbl" style="margin-top:10px">
+                <thead><tr><th style="width:34%">Value</th><th>What it means</th></tr></thead>
+                <tbody>{rows}</tbody>
+              </table>
+              <div style="font-size:11.5px;line-height:1.7;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--s1)"><strong style="color:var(--ink)">In this framework:</strong> {it['use']}</div>
+            </div>"""
+    # concepts
+    out += '<div class="sec-title" style="margin-top:22px">Key Concepts</div>'
+    out += '<div class="card"><div class="sig-list">'
+    for title, body in LEGEND_CONCEPTS:
+        out += (f'<div style="padding:11px 0;border-bottom:1px solid var(--s1)">'
+                f'<div style="font-size:13px;font-weight:700;margin-bottom:3px">{title}</div>'
+                f'<div style="font-size:12px;line-height:1.7;color:var(--muted)">{body}</div></div>')
+    out += '</div></div>'
+    return out
+
+
 def _render_tips() -> str:
     cats = {}
     for cat, color, title, body in INVESTMENT_TIPS:
@@ -873,6 +1016,7 @@ body{{
   <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
+  <button class="ntab" onclick="tab('legend',this)">Legend</button>
 </div>
 
 <!-- MOBILE BOTTOM NAV -->
@@ -883,6 +1027,7 @@ body{{
     <button class="mnav-btn" onclick="tabM('regime',this)"><div class="mnav-icon">🗺️</div>Regime</button>
     <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
     <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
+    <button class="mnav-btn" onclick="tabM('legend',this)"><div class="mnav-icon">📖</div>Legend</button>
   </div>
 </div>
 
@@ -1429,6 +1574,18 @@ body{{
       </tbody>
     </table>
   </div>
+</div>
+
+<!-- ══════════ LEGEND ══════════ -->
+<div class="panel" id="panel-legend">
+  <div class="sec-title">Indicator Legend · How Everything Works</div>
+  <div class="card" style="margin-bottom:6px">
+    <div style="font-size:12.5px;line-height:1.8;color:var(--muted)">
+      Every technical indicator used across this dashboard, what it measures, how it's calculated, and what each
+      value range signals. Colored dots match the thresholds used in the regime and profit-taking logic.
+    </div>
+  </div>
+  {_render_legend()}
 </div>
 
 </div><!-- /page -->

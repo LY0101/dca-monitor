@@ -23,13 +23,49 @@ Hysteresis is re-expressed in WEEKS (months x ~4.33):
   fear -> bull/euphoria is blocked: reroute through chop first
 """
 
+import re
+import requests
 import numpy as np
 import pandas as pd
 import yfinance as yf
 import pandas_ta as ta
-from config import EUPHORIA_THRESHOLDS as ET, EUPHORIA_SIGNALS_REQUIRED as EREQ
+from bs4 import BeautifulSoup
+from config import (EUPHORIA_THRESHOLDS as ET, EUPHORIA_SIGNALS_REQUIRED as EREQ,
+                    PROFIT_THRESHOLDS, VALUATION_LABELS)
 
 OUT = "historical_regime.xlsx"
+_HDR = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                      "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"}
+
+
+def fetch_cape_history() -> pd.Series:
+    """Monthly Shiller CAPE history scraped from multpl.com (back to 1871)."""
+    try:
+        r = requests.get("https://www.multpl.com/shiller-pe/table/by-month",
+                         timeout=20, headers=_HDR)
+        soup = BeautifulSoup(r.text, "html.parser")
+        recs = []
+        for tr in soup.select("table#datatable tr")[1:]:
+            c = [td.get_text(strip=True) for td in tr.find_all("td")]
+            if len(c) >= 2:
+                try:
+                    recs.append((pd.to_datetime(c[0]),
+                                 float(re.sub(r"[^0-9.]", "", c[1]))))
+                except Exception:
+                    pass
+        s = pd.DataFrame(recs, columns=["Date", "CAPE"]).set_index("Date").sort_index()["CAPE"]
+        print(f"  CAPE   {s.index[0].date()} -> {s.index[-1].date()}  ({len(s)} months)")
+        return s
+    except Exception as e:
+        print(f"  CAPE   fetch failed ({e}) — column will be blank")
+        return pd.Series(dtype="float64")
+
+
+def _cape_score(v) -> int:
+    if pd.isna(v):
+        return 0
+    t = PROFIT_THRESHOLDS["cape"]
+    return 3 if v >= t[2] else 2 if v >= t[1] else 1 if v >= t[0] else 0
 
 TICKERS = {
     "QQQ":  "QQQ",
@@ -184,6 +220,10 @@ def main():
     # need at least VIX + the core QQQ indicators present
     weekly = weekly.dropna(subset=["VIX", "QQQ", "QQQ_above_200ma_pct", "RSI_35", "QQQ_return_12m_pct"])
 
+    # merge historical Shiller CAPE (monthly, forward-filled to weekly)
+    cape = fetch_cape_history()
+    weekly["CAPE"] = cape.reindex(weekly.index, method="ffill") if not cape.empty else np.nan
+
     # classify
     euph, raw = [], []
     for _, r in weekly.iterrows():
@@ -192,6 +232,8 @@ def main():
     weekly["euphoria_signals"] = euph
     weekly["raw_regime"] = raw
     weekly["regime_hysteresis"] = apply_weekly_hysteresis(raw)
+    # valuation warning (CAPE-based historically; live version also uses QQQ P/E)
+    weekly["valuation_warning"] = [VALUATION_LABELS[_cape_score(v)] for v in weekly["CAPE"]]
 
     # tidy for output
     weekly = weekly.reset_index().rename(columns={"index": "Date", "Date": "Date"})
@@ -200,13 +242,14 @@ def main():
     cols = ["Date", "QQQ", "TQQQ", "SMH", "SOXL", "VIX",
             "QQQ_200d_SMA", "QQQ_above_200ma_pct", "QQQ_drawdown_52w_pct",
             "RSI_35", "MACD_bull", "SMH_vs_QQQ_20d_RS_pct", "QQQ_return_12m_pct",
+            "CAPE", "valuation_warning",
             "euphoria_signals", "raw_regime", "regime_hysteresis"]
     weekly = weekly[cols]
 
     # round numerics
     rnd = {"QQQ":2,"TQQQ":2,"SMH":2,"SOXL":2,"VIX":2,"QQQ_200d_SMA":2,
            "QQQ_above_200ma_pct":1,"QQQ_drawdown_52w_pct":1,"RSI_35":1,
-           "SMH_vs_QQQ_20d_RS_pct":2,"QQQ_return_12m_pct":1}
+           "SMH_vs_QQQ_20d_RS_pct":2,"QQQ_return_12m_pct":1,"CAPE":1}
     for c, n in rnd.items():
         weekly[c] = weekly[c].round(n)
 
@@ -239,6 +282,7 @@ def main():
         "Date", "QQQ / TQQQ / SMH / SOXL", "VIX",
         "QQQ_200d_SMA", "QQQ_above_200ma_pct", "QQQ_drawdown_52w_pct",
         "RSI_35", "MACD_bull", "SMH_vs_QQQ_20d_RS_pct", "QQQ_return_12m_pct",
+        "CAPE", "valuation_warning",
         "euphoria_signals", "raw_regime", "regime_hysteresis",
         "METHOD: indicators", "METHOD: VIX bands", "METHOD: euphoria",
         "METHOD: hysteresis", "DATA",
@@ -253,7 +297,9 @@ def main():
         "True when MACD line (12/26/9) is above its signal line.",
         "QQQ-relative 20-day return of SMH (semis leadership). Blank before SMH data.",
         "QQQ trailing 12-month (252-day) % return.",
-        "How many of the 4 euphoria signals fire (VIX<15, >25% above 200MA, RSI35>72, 12M ret>45%).",
+        "Shiller CAPE (S&P 500 cyclically-adjusted P/E), monthly, forward-filled. The dot-com bubble gauge — peaked at 44 in Dec 1999.",
+        "Valuation warning level from CAPE: Normal <28 | Elevated 28+ | Extreme 34+ | Bubble 40+. VIX-independent, so it catches the 2000 top the VIX regime missed.",
+        "How many of the 4 euphoria signals fire (VIX<16, >18% above 200MA, RSI35>70, 12M ret>30%).",
         "Instantaneous regime that week (VIX bands + euphoria overlay). No smoothing.",
         "Regime after weekly hysteresis smoothing — the one the framework would actually act on.",
         "All indicators computed on DAILY data (matching the live tool), then sampled at Friday close.",

@@ -1360,7 +1360,7 @@ body{{
   <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
-  <button class="ntab" onclick="tab('backtest',this)">Backtest</button>
+  <button class="ntab" onclick="tab('backtest-temp',this)">Backtest-temp</button>
   <button class="ntab" onclick="tab('tips',this)">Tips</button>
   <button class="ntab" onclick="tab('legend',this)">Legend</button>
 </div>
@@ -1373,7 +1373,7 @@ body{{
     <button class="mnav-btn" onclick="tabM('regime',this)"><div class="mnav-icon">🗺️</div>Regime</button>
     <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
     <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
-    <button class="mnav-btn" onclick="tabM('backtest',this)"><div class="mnav-icon">🧪</div>Backtest</button>
+    <button class="mnav-btn" onclick="tabM('backtest-temp',this)"><div class="mnav-icon">🧪</div>Backtest-temp</button>
     <button class="mnav-btn" onclick="tabM('tips',this)"><div class="mnav-icon">💡</div>Tips</button>
     <button class="mnav-btn" onclick="tabM('legend',this)"><div class="mnav-icon">📖</div>Legend</button>
   </div>
@@ -1921,9 +1921,9 @@ body{{
   </div>
 </div>
 
-<!-- ══════════ BACKTEST ══════════ -->
-<div class="panel" id="panel-backtest">
-  <div class="sec-title">Backtest · Adaptive Strategy vs Buy &amp; Hold</div>
+<!-- ══════════ BACKTEST-TEMP ══════════ -->
+<div class="panel" id="panel-backtest-temp">
+  <div class="sec-title">Backtest-temp · Adaptive Strategy vs Buy &amp; Hold <span style="color:var(--light);font-weight:400;letter-spacing:0">· experimental / work-in-progress</span></div>
   <div class="card" style="margin-bottom:12px">
     <div style="font-size:12.5px;line-height:1.8;color:var(--muted)">
       Apples-to-apples backtest: the adaptive strategy is run <strong>fully invested</strong> — no cash, no

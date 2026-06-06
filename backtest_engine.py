@@ -176,35 +176,32 @@ def bh_sim(prices, contrib):
 
 # ── strategy simulation ───────────────────────────────────────
 
-def run():
-    m = build_monthly()
-    dates = m.index
-    print(f"Backtest window: {dates[0].date()} -> {dates[-1].date()}  ({len(dates)} months)")
-
+def simulate_strategy(m, dates, cap=None):
+    """
+    Fully-invested adaptive strategy.
+    cap=None  -> no cap (pure apples-to-apples).
+    cap=0.25  -> each December, trim any ETF above 25% of total NAV to cash
+                 ('Adaptive strategy with cash').
+    Returns a dict with rows, twr/wts/twr_idx, alloc_hist (incl Cash), final, cashflows.
+    """
     shares = {e: 0.0 for e in ETFS}
-    cost   = {e: 0.0 for e in ETFS}   # cumulative $ cost basis per ETF
+    cost   = {e: 0.0 for e in ETFS}
     cash   = 0.0
-    raw_hist = []
-    rows = []
+    raw_hist, rows, cashflows = [], [], []
     prev_nav = None
     twr, wts, twr_idx = [], [], []
-    alloc_hist = {e: [] for e in ETFS}
+    alloc_hist = {e: [] for e in ETFS}; alloc_hist["Cash"] = []
     idx = 1.0
-    cashflows = []          # for IRR (contributions negative)
-
-    # B&H benchmark (100% QQQ, same contributions)
     bh_sh = 0.0
 
     for i, dt in enumerate(dates):
         px = {e: float(m.loc[dt, e]) for e in ETFS}
 
-        # 1) growth of existing holdings since last month (time-weighted return)
         if prev_nav is not None and prev_nav > 0:
             v_pre = sum(shares[e] * px[e] for e in ETFS) + cash
             tw = v_pre / prev_nav - 1
             twr.append(tw); wts.append(prev_nav); idx *= (1 + tw); twr_idx.append(idx)
 
-        # 2) regime
         d = {"vix": float(m.loc[dt, "VIX"]),
              "above_200ma_pct": float(m.loc[dt, "above_200ma_pct"]),
              "rsi": float(m.loc[dt, "rsi"]),
@@ -213,7 +210,6 @@ def run():
         regime = decide_regime(raw, raw_hist)
         raw_hist.append(raw)
 
-        # 3) profit-taking (live evaluate; P/E unavailable historically -> None)
         tqqq_gain = ((px["TQQQ"]/(cost["TQQQ"]/shares["TQQQ"]))-1)*100 if shares["TQQQ"]>0 and cost["TQQQ"]>0 else None
         pt = evaluate({**d, "qqq_pe_fwd": None, "cape": (None if pd.isna(m.loc[dt,"cape"]) else float(m.loc[dt,"cape"])),
                        "tqqq_gain_pct": tqqq_gain})
@@ -222,38 +218,41 @@ def run():
         buys  = {e: 0.0 for e in ETFS}
         sells = {e: 0.0 for e in ETFS}
 
-        # APPLES-TO-APPLES MODE: always fully invested — no profit-taking sells,
-        # no cash. The alert is still computed (shown for context) but not acted on.
-        # Euphoria deploys into the defensive unleveraged sleeve (QQQ/SMH) instead
-        # of holding cash, so every dollar stays in the market like Buy & Hold.
+        # deploy the full contribution per regime (fully invested)
         contrib = MONTHLY_BUDGET
         cashflows.append(-contrib)
         alloc_key = {"euphoria": "chop", "fear2": "fear2_lev"}.get(regime, regime)
-        deploy = contrib
         for etf, w in ALLOCATIONS[alloc_key].items():
             if w > 0:
-                dollars = deploy * w
-                sh = dollars * (1 - TXN_COST) / px[etf]
-                shares[etf] += sh
+                dollars = contrib * w
+                shares[etf] += dollars * (1 - TXN_COST) / px[etf]
                 cost[etf]   += dollars
                 buys[etf]   += dollars
 
-        # 5) record
+        # ANNUAL DECEMBER REBALANCE: cap each ETF at `cap` of total NAV; excess -> cash
+        if cap and dt.month == 12:
+            nav_now = sum(shares[e] * px[e] for e in ETFS) + cash
+            capval = cap * nav_now
+            for e in ETFS:
+                val = shares[e] * px[e]
+                if val > capval + 1:
+                    frac = (val - capval) / val
+                    sh = shares[e] * frac
+                    shares[e] -= sh
+                    cost[e]   *= (1 - frac)
+                    cash += sh * px[e] * (1 - TXN_COST)
+                    sells[e] += sh * px[e]
+
         holdings_val = sum(shares[e] * px[e] for e in ETFS)
         nav = holdings_val + cash
         prev_nav = nav
-
-        # per-month % allocation across ETFs (of holdings value)
         for e in ETFS:
-            alloc_hist[e].append(round(shares[e] * px[e] / holdings_val * 100, 1) if holdings_val > 0 else 0.0)
+            alloc_hist[e].append(round(shares[e] * px[e] / nav * 100, 1) if nav > 0 else 0.0)
+        alloc_hist["Cash"].append(round(cash / nav * 100, 1) if nav > 0 else 0.0)
 
-        # B&H: contribution into QQQ
         bh_sh += contrib * (1 - TXN_COST) / px["QQQ"]
-        bh_nav = bh_sh * px["QQQ"]
-
         rows.append({
-            "Date": dt.date(), "Regime": regime, "ProfitTaking": alert,
-            "Contribution": contrib,
+            "Date": dt.date(), "Regime": regime, "ProfitTaking": alert, "Contribution": contrib,
             "Buy_QQQ": round(buys["QQQ"]), "Buy_TQQQ": round(buys["TQQQ"]),
             "Buy_SMH": round(buys["SMH"]), "Buy_SOXL": round(buys["SOXL"]),
             "Sell_TQQQ": round(sells["TQQQ"]), "Sell_SOXL": round(sells["SOXL"]),
@@ -264,13 +263,29 @@ def run():
             "Cash": round(cash), "Holdings_Value": round(holdings_val),
             "NAV": round(nav), "Cum_Contrib": round(sum(-c for c in cashflows)),
             "Monthly_TWR_%": round(twr[-1]*100,2) if twr else 0.0,
-            "TWR_Index": round(idx,3),
-            "BH_NAV": round(bh_nav),
+            "TWR_Index": round(idx,3), "BH_NAV": round(bh_sh * px["QQQ"]),
         })
+
+    return {"rows": rows, "twr": twr, "wts": wts, "twr_idx": twr_idx,
+            "alloc_hist": alloc_hist, "final": nav, "cashflows": cashflows}
+
+
+def run():
+    m = build_monthly()
+    dates = m.index
+    print(f"Backtest window: {dates[0].date()} -> {dates[-1].date()}  ({len(dates)} months)")
+
+    main   = simulate_strategy(m, dates, cap=None)
+    capped = simulate_strategy(m, dates, cap=0.25)
+
+    rows = main["rows"]
+    twr, wts, twr_idx = main["twr"], main["wts"], main["twr_idx"]
+    alloc_hist = main["alloc_hist"]
+    cashflows = main["cashflows"]
+    final = main["final"]
 
     df = pd.DataFrame(rows)
     contributed = df["Cum_Contrib"].iloc[-1]
-    final = df["NAV"].iloc[-1]
     years = (dates[-1] - dates[0]).days / 365.25
     cfs = [-MONTHLY_BUDGET] * len(dates)
 
@@ -293,6 +308,8 @@ def run():
         }
 
     strat = metrics("Adaptive strategy", twr, wts, twr_idx, final)
+    strat_cap = metrics("Adaptive + cash (25% cap)",
+                        capped["twr"], capped["wts"], capped["twr_idx"], capped["final"])
 
     # ── Buy & Hold benchmarks for every ETF ──
     benchmarks, bench_curves = {}, {}
@@ -306,6 +323,7 @@ def run():
     curve = {
         "dates": [d.strftime("%Y-%m") for d in dates],
         "strat": [round(v, 4) for v in ([1.0] + twr_idx)],
+        "capped": [round(v, 4) for v in ([1.0] + capped["twr_idx"])],
         **bench_curves,
     }
 
@@ -328,11 +346,14 @@ def run():
         "monthly_contribution": MONTHLY_BUDGET, "contributed": round(contributed),
         "growth_dollars": round(final - contributed),
         "growth_pct_of_final": round((final - contributed) / final * 100, 1),
-        "strategy": strat, "bh": benchmarks["QQQ"], "benchmarks": benchmarks,
+        "strategy": strat, "strategy_capped": strat_cap,
+        "bh": benchmarks["QQQ"], "benchmarks": benchmarks,
         "regime_distribution": {k: int(v) for k, v in dist.items()},
         "rf_annual": RF_ANNUAL,
         "curve": curve, "monthly": monthly,
         "alloc": {"dates": curve["dates"], **{e: alloc_hist[e] for e in ETFS}},
+        "alloc_capped": {"dates": curve["dates"], **{e: capped["alloc_hist"][e] for e in ETFS},
+                         "Cash": capped["alloc_hist"]["Cash"]},
     }
 
     _write_excel(df, summary)
@@ -345,6 +366,7 @@ def run():
         print(f"{nm:22s}{('$'+format(d['final'],',')):>16s}{str(d['multiple'])+'x':>8s}"
               f"{str(d['twr_cagr'])+'%':>8s}{str(d['inv_sharpe']):>7s}{str(d['maxdd_pct'])+'%':>8s}")
     line("Adaptive strategy", strat)
+    line("Adaptive + 25% cap", strat_cap)
     for e in ETFS:
         line(f"B&H {e}", benchmarks[e])
     print(f"Wrote {XLSX} and {JSON}")

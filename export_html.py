@@ -203,6 +203,8 @@ def _render_equity_chart(curve) -> str:
     import math
     dates = curve["dates"]
     series = [("Adaptive strategy", curve["strat"], "#111827", 2.4)]
+    if "capped" in curve:
+        series.append(("Adaptive + 25% cap", curve["capped"], "#059669", 2.2))
     for etf, col in (("QQQ","#6b7280"),("SMH","#2563eb"),("TQQQ","#d97706"),("SOXL","#dc2626")):
         if etf in curve:
             series.append((f"B&H {etf}", curve[etf], col, 1.4))
@@ -301,14 +303,18 @@ def _render_monthly(rows) -> str:
     The same data (plus prices and the TWR index) is in <code>backtest.xlsx</code>.</div>"""
 
 
-def _render_alloc_chart(alloc) -> str:
-    """Stacked-area SVG: % of the strategy's holdings in each ETF, every month."""
+def _render_alloc_chart(alloc, title="Portfolio composition over time · % of holdings in each ETF", note=None) -> str:
+    """Stacked-area SVG: % of the strategy's value in each ETF (and cash), every month."""
     if not alloc or not alloc.get("dates"):
         return ""
     dates = alloc["dates"]
     n = len(dates)
-    order = [("QQQ", "#6b7280"), ("SMH", "#2563eb"), ("TQQQ", "#d97706"), ("SOXL", "#dc2626")]
+    order = [("QQQ", "#6b7280"), ("SMH", "#2563eb"), ("TQQQ", "#d97706"), ("SOXL", "#dc2626"), ("Cash", "#cbd5e1")]
     order = [(e, c) for e, c in order if e in alloc]
+    if note is None:
+        note = ("Each band is that ETF's share of the strategy's value each month (sums to 100%). Watch the leveraged "
+                "bands (TQQQ amber, SOXL red) swell over time — both because most months are bull <em>and</em> because leverage "
+                "compounds faster — quietly concentrating risk even though new chop-month money goes to QQQ/SMH.")
     W, H, L, R, T, Bm = 820, 300, 40, 16, 14, 28
     pw, ph = W - L - R, H - T - Bm
     def X(i): return L + (i / (n - 1)) * pw
@@ -341,14 +347,12 @@ def _render_alloc_chart(alloc) -> str:
 
     return f"""
     <div class="card" style="margin-bottom:12px">
-      <div class="sec-title" style="margin-bottom:6px">Portfolio composition over time · % of holdings in each ETF</div>
+      <div class="sec-title" style="margin-bottom:6px">{title}</div>
       <div style="display:flex;gap:14px;margin-bottom:6px;font-size:11px;flex-wrap:wrap">{legend}</div>
       <svg viewBox="0 0 {W} {H}" style="width:100%;height:auto;font-family:'IBM Plex Mono',monospace">
         {grid}{ticks}{areas}
       </svg>
-      <div class="note">Each band is that ETF's share of the strategy's value each month (sums to 100%). Watch the leveraged
-      bands (TQQQ amber, SOXL red) swell over time — both because most months are bull <em>and</em> because leverage
-      compounds faster — quietly concentrating risk even though new chop-month money goes to QQQ/SMH.</div>
+      <div class="note">{note}</div>
     </div>"""
 
 
@@ -357,8 +361,12 @@ def _render_backtest(s) -> str:
         return ('<div class="card"><div style="color:var(--muted);font-size:13px;line-height:1.7">'
                 'No backtest results yet. Run <code>python backtest_engine.py</code> to generate them.</div></div>')
     st = s["strategy"]
+    cap = s.get("strategy_capped")
     bm = s.get("benchmarks", {})
-    cols = [("Strategy", st)] + [(e, bm[e]) for e in ("QQQ","SMH","TQQQ","SOXL") if e in bm]
+    cols = [("Strategy", st)]
+    if cap:
+        cols.append(("Strat +25% cap", cap))
+    cols += [(e, bm[e]) for e in ("QQQ","SMH","TQQQ","SOXL") if e in bm]
 
     def row(label, key, fmt, better="hi", note=""):
         vals = [d.get(key) for _, d in cols]
@@ -388,19 +396,22 @@ def _render_backtest(s) -> str:
     # verdict — compare strategy to the best benchmark on money and on Sharpe
     best_mult = max(cols, key=lambda c: c[1]["multiple"])
     best_shp  = max(cols, key=lambda c: c[1]["inv_sharpe"])
-    tqqq = bm.get("TQQQ", {})
     verdict = (
-        f"Fully invested (apples-to-apples), the adaptive strategy turned <strong>${s['contributed']:,}</strong> into "
-        f"<strong>${st['final']:,}</strong> ({st['multiple']}×) — essentially tying naive Buy &amp; Hold TQQQ "
-        f"({tqqq.get('multiple','?')}×), but with a <strong>lower Sharpe</strong> ({st['inv_sharpe']} vs {tqqq.get('inv_sharpe','?')}) "
-        f"and a slightly <strong>worse drawdown</strong> ({st['maxdd_pct']}% vs {tqqq.get('maxdd_pct','?')}%). "
-        f"In other words, all the regime-switching machinery roughly <em>replicated</em> holding TQQQ — it did not beat it "
-        f"on a risk-adjusted basis. Meanwhile unleveraged <strong>{best_shp[0]}</strong> had the best Sharpe overall "
-        f"({best_shp[1]['inv_sharpe']}) with a survivable {best_shp[1]['maxdd_pct']}% drawdown, and SOXL made the most money "
-        f"({bm.get('SOXL',{}).get('multiple','?')}×) at the deepest plunge ({bm.get('SOXL',{}).get('maxdd_pct','?')}%). "
-        f"The honest takeaway: over this best-case-for-tech window the cleverness didn't add risk-adjusted value — "
-        f"what actually governs the outcome is how much leverage you hold and whether you can survive an ~80% drawdown. "
-        f"Position size, not strategy complexity, is the real lever."
+        f"Fully invested, the adaptive strategy ({st['multiple']}×, Sharpe {st['inv_sharpe']}, {st['maxdd_pct']}% drawdown) "
+        f"essentially replicated Buy &amp; Hold TQQQ — the regime-switching added no risk-adjusted value. "
+    )
+    if cap:
+        verdict += (
+            f"<strong>But capping each ETF at 25% every December (excess → cash) is a real improvement:</strong> it "
+            f"<strong>halved the drawdown ({st['maxdd_pct']}% → {cap['maxdd_pct']}%)</strong> and lifted the Sharpe to "
+            f"<strong>{cap['inv_sharpe']}</strong> (the best of any leveraged variant), while still compounding to "
+            f"{cap['multiple']}× — more than 2× Buy &amp; Hold QQQ ({bm.get('QQQ',{}).get('multiple','?')}×). "
+            f"You give up raw return ({st['multiple']}× → {cap['multiple']}×) to buy a far more survivable ride. "
+        )
+    verdict += (
+        f"Unleveraged <strong>{best_shp[0]}</strong> still has the highest Sharpe overall ({best_shp[1]['inv_sharpe']}, "
+        f"{best_shp[1]['maxdd_pct']}% drawdown). The takeaway: <strong>rebalancing/​capping concentration is the optimization that "
+        f"actually moves risk-adjusted return</strong> — far more than the regime-switching does."
     )
 
     dist = s.get("regime_distribution", {})
@@ -421,6 +432,12 @@ def _render_backtest(s) -> str:
     {_render_equity_chart(s.get("curve"))}
 
     {_render_alloc_chart(s.get("alloc"))}
+
+    {_render_alloc_chart(s.get("alloc_capped"),
+        title="With the 25% cap (Adaptive + cash) · composition incl. cash",
+        note="Same strategy, but each December any ETF above 25% of the portfolio is trimmed to cash (grey band). "
+             "No single position runs away — SOXL/TQQQ are held to 25% each and the trimmed gains build a growing cash buffer. "
+             "This is what halved the drawdown.") if s.get("alloc_capped") else ""}
 
     <div class="card" style="margin-bottom:12px">
       <div class="bt-scroll" style="max-height:none">

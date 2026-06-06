@@ -326,6 +326,42 @@ def _vol_valuation_signal(rvpct, cape, cape_score):
         f"{rv}, {cv}. No clear volatility×valuation extreme — read the individual signals above.")
 
 
+def _render_quadrant(cape, qrv_p):
+    """2×2 volatility × valuation map with a 'NOW' marker plotted continuously."""
+    if cape is None or qrv_p is None:
+        return ""
+    qx   = max(6, min(94, (cape - 12) / (44 - 12) * 100))   # x: cheap→expensive
+    qtop = max(10, min(90, 100 - qrv_p))                    # y: high vol at top
+    expensive = cape >= 28
+    hivol     = qrv_p >= 50
+    active = ("tr" if expensive and hivol else "tl" if hivol
+              else "br" if expensive else "bl")
+    cells = {
+        "tl": ("🟢","OPPORTUNITY","High vol · cheap — stress at low prices (e.g. 2008–09)","var(--green)","var(--green-bg)"),
+        "tr": ("🔴","BUBBLE BURSTING","High vol · expensive — stress at extreme prices (e.g. 2000)","var(--red)","var(--red-bg)"),
+        "bl": ("🟢","ACCUMULATE","Low vol · cheap — calm and inexpensive","var(--green)","var(--green-bg)"),
+        "br": ("🟠","COMPLACENCY","Low vol · expensive — quiet top setup (e.g. 2021)","var(--orange)","var(--orange-bg)"),
+    }
+    def cell(k):
+        ic, ttl, sub, col, bg = cells[k]
+        act = " active" if k == active else ""
+        op  = "1" if k == active else "0.55"
+        return (f'<div class="qcell {k}{act}" style="color:{col};background:{bg};opacity:{op}">'
+                f'<div class="qicon">{ic}</div><div class="qttl" style="color:{col}">{ttl}</div>'
+                f'<div class="qsub">{sub}</div></div>')
+    label_top = max(5, qtop - 12)
+    return f"""
+    <div style="font-size:10px;color:var(--muted);font-weight:600;text-align:center;margin-bottom:4px">↑ HIGHER REALIZED VOLATILITY</div>
+    <div class="quad-box">
+      {cell("tl")}{cell("tr")}{cell("bl")}{cell("br")}
+      <div class="quad-now" style="left:{qx:.0f}%;top:{label_top:.0f}%">● YOU ARE HERE</div>
+      <div class="quad-marker" style="left:{qx:.0f}%;top:{qtop:.0f}%"></div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);font-weight:600;text-align:center;margin-top:4px">↓ LOWER REALIZED VOLATILITY</div>
+    <div class="quad-axis-x">CHEAPER &nbsp;←&nbsp; VALUATION (Shiller CAPE) &nbsp;→&nbsp; MORE EXPENSIVE</div>
+    """
+
+
 def _cond(signal, threshold, today_val, met, neutral=False):
     if neutral:
         color, icon = "var(--muted)", "·"
@@ -963,6 +999,20 @@ body{{
 .tip-body{{font-size:11.5px;color:var(--muted);line-height:1.6}}
 @media(max-width:600px){{.tips-grid{{grid-template-columns:1fr}}}}
 
+/* ── VOL × VALUATION QUADRANT ── */
+.quad-box{{position:relative;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;aspect-ratio:1.9/1;border-radius:10px;overflow:hidden;border:1px solid var(--border)}}
+.qcell{{padding:12px 14px;display:flex;flex-direction:column;justify-content:center;gap:3px;transition:opacity .2s}}
+.qcell.tl{{border-right:1px dashed var(--border2);border-bottom:1px dashed var(--border2)}}
+.qcell.tr{{border-bottom:1px dashed var(--border2)}}
+.qcell.bl{{border-right:1px dashed var(--border2)}}
+.qcell .qicon{{font-size:13px}}
+.qcell .qttl{{font-size:11.5px;font-weight:800;letter-spacing:.2px}}
+.qcell .qsub{{font-size:10px;color:var(--muted);line-height:1.4}}
+.qcell.active{{box-shadow:inset 0 0 0 3px currentColor}}
+.quad-marker{{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--ink);border:3px solid #fff;box-shadow:0 0 0 2px var(--ink),0 3px 8px rgba(0,0,0,.35);transform:translate(-50%,-50%);z-index:20}}
+.quad-now{{position:absolute;transform:translate(-50%,-50%);background:var(--ink);color:#fff;font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:5px;white-space:nowrap;z-index:21}}
+.quad-axis-x{{text-align:center;font-size:10px;color:var(--muted);margin-top:5px;font-weight:600;letter-spacing:.5px}}
+
 /* ── MOBILE BOTTOM NAV ── */
 .mobile-nav{{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}}
 .mobile-nav-inner{{display:flex}}
@@ -1016,6 +1066,7 @@ body{{
   <button class="ntab" onclick="tab('regime',this)">Regime Guide</button>
   <button class="ntab" onclick="tab('profit',this)">Profit-Taking</button>
   <button class="ntab" onclick="tab('allocations',this)">Allocations</button>
+  <button class="ntab" onclick="tab('tips',this)">Tips</button>
   <button class="ntab" onclick="tab('legend',this)">Legend</button>
 </div>
 
@@ -1027,6 +1078,7 @@ body{{
     <button class="mnav-btn" onclick="tabM('regime',this)"><div class="mnav-icon">🗺️</div>Regime</button>
     <button class="mnav-btn" onclick="tabM('profit',this)"><div class="mnav-icon">⚠️</div>Profit</button>
     <button class="mnav-btn" onclick="tabM('allocations',this)"><div class="mnav-icon">📐</div>Alloc</button>
+    <button class="mnav-btn" onclick="tabM('tips',this)"><div class="mnav-icon">💡</div>Tips</button>
     <button class="mnav-btn" onclick="tabM('legend',this)"><div class="mnav-icon">📖</div>Legend</button>
   </div>
 </div>
@@ -1162,21 +1214,18 @@ body{{
   <div class="reg-summary" style="border-color:{_rvol_color((qrv_p+srv_p)/2) if (qrv_p is not None and srv_p is not None) else 'var(--border)'};color:var(--ink);margin-top:12px">
     {_rvol_interpretation(regime, qrv_p, srv_p)}
   </div>
+
+  <div class="sec-title" style="margin-top:24px">Volatility × Valuation Map</div>
+  <div class="card">
+    {_render_quadrant(qrv_p, cape)}
+  </div>
   {(lambda s: f'''
   <div class="card" style="margin-top:12px;border-left:3px solid {s[2]}">
     <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{s[2]};margin-bottom:6px">
-      {s[0]} Volatility × Valuation · {s[1]}
+      {s[0]} Current read · {s[1]}
     </div>
     <div style="font-size:13px;line-height:1.7;color:var(--ink)">{s[3]}</div>
   </div>''' if s else '')(_vol_valuation_signal(qrv_p, cape, pt["scores"]["cape"]))}
-
-  <div class="sec-title" style="margin-top:24px">💡 Investment Tips · Hard-Won Wisdom</div>
-  <div class="tips-grid">
-    {_render_tips()}
-  </div>
-  <div style="font-size:10px;color:var(--light);text-align:center;margin-top:10px;font-family:'IBM Plex Mono',monospace">
-    Distilled from strategy reviews · revisited periodically as the framework evolves
-  </div>
 
 </div>
 
@@ -1573,6 +1622,20 @@ body{{
         <tr><td style="color:var(--green);font-weight:700">Never</td><td><strong>QQQ</strong></td><td>—</td><td>No decay · lowest fee · 20-year core position</td><td class="r" style="color:var(--green)">Never</td></tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- ══════════ TIPS ══════════ -->
+<div class="panel" id="panel-tips">
+  <div class="sec-title">💡 Investment Tips · Hard-Won Wisdom</div>
+  <div class="card" style="margin-bottom:12px">
+    <div style="font-size:12.5px;line-height:1.8;color:var(--muted)">
+      Distilled from strategy reviews — the principles behind this framework, grouped by theme.
+      Revisited periodically as the strategy evolves.
+    </div>
+  </div>
+  <div class="tips-grid">
+    {_render_tips()}
   </div>
 </div>
 

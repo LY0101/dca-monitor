@@ -25,6 +25,65 @@ ALERT_CLASS  = {"HOLD":"hold","WATCH":"watch","CAUTION":"caution","EXTREME":"ext
 ALERT_COLOR  = {"HOLD":"var(--green)","WATCH":"var(--amber)","CAUTION":"var(--red)","EXTREME":"var(--purple)"}
 ETF_COLOR    = {"TQQQ":"var(--amber)","SOXL":"var(--red)","QQQ":"var(--ink)","SMH":"var(--ink)"}
 
+# ── INVESTMENT TIPS — distilled wisdom. Append new ones here. ──
+# Each: (category, color_var, title, one-liner)
+INVESTMENT_TIPS = [
+    ("Sizing", "var(--red)",
+     "Cap the sleeve at ~10–15% of liquid net worth",
+     "Position size is the only risk control that always works. Set the cap on PEAK exposure — including any crash doubledown."),
+    ("Sizing", "var(--red)",
+     "Could you survive the sleeve going to zero?",
+     "The honest question isn't 'what's my return' — it's whether a near-total loss of the leveraged book leaves your life intact."),
+    ("Structure", "var(--red)",
+     "Run a barbell: huge safe core, small hot satellite",
+     "Most wealth in T-bills/treasuries, a small slice in leverage. The T-bill fund IS your hedge — held separately, not bolted into the strategy."),
+    ("Leverage", "var(--amber)",
+     "3× ETFs only work in trends — they bleed in chop",
+     "Daily rebalancing causes volatility decay: 15–30%/yr lost in sideways markets even if the index goes nowhere."),
+    ("Leverage", "var(--amber)",
+     "Recovery math is brutal — avoid deep drawdowns",
+     "From −90% you need +900% to break even; from −97%, +3,200%. Dodging the drawdown beats chasing the upside."),
+    ("Leverage", "var(--amber)",
+     "Concentration is hidden: it's all one tech bet",
+     "QQQ, TQQQ, SMH, SOXL overlap heavily. Diversify at the TOTAL-portfolio level (the safe core), not inside the sleeve."),
+    ("Timing", "var(--purple)",
+     "VIX is coincident, not predictive",
+     "It spikes AFTER price falls. VIX > 45 is not the bottom — in 2008 it hit 45 in September, then the market fell ~30% more into March."),
+    ("Timing", "var(--purple)",
+     "Ladder crash deployment by depth, not a single lump",
+     "Don't empty the reserve at the first panic print. Buy progressively more as drawdown deepens so you're never out of ammo at the bottom."),
+    ("Timing", "var(--purple)",
+     "Don't trust correlations in a crisis",
+     "In 2022 stocks and long bonds fell together — the classic TQQQ/TMF hedge broke exactly when it was needed."),
+    ("Discipline", "var(--green)",
+     "Profit-taking sell order: SOXL → TQQQ → SMH → QQQ never",
+     "Trim the highest-decay leverage first. QQQ is the permanent core and is never sold."),
+    ("Discipline", "var(--green)",
+     "Judge by MAR ratio, not raw return",
+     "CAGR ÷ max drawdown is the real scoreboard. A strategy that returns less but draws down half as much usually wins long term."),
+    ("Discipline", "var(--green)",
+     "Beware the backtest — it only saw the good years",
+     "TQQQ/SOXL launched in 2010, the best tech window ever. A 3× Nasdaq through 2000–02 was a near-total loss. Size for the regime you haven't seen."),
+]
+
+
+def _render_tips() -> str:
+    cats = {}
+    for cat, color, title, body in INVESTMENT_TIPS:
+        cats.setdefault((cat, color), []).append((title, body))
+    blocks = ""
+    for (cat, color), items in cats.items():
+        rows = "".join(
+            f"""<div class="tip-row">
+                  <div class="tip-title">{t}</div>
+                  <div class="tip-body">{b}</div>
+                </div>""" for t, b in items)
+        blocks += f"""<div class="tip-group" style="border-left-color:{color}">
+            <div class="tip-cat" style="color:{color}">{cat}</div>
+            {rows}
+          </div>"""
+    return blocks
+
 
 def _cond(signal, threshold, today_val, met, neutral=False):
     if neutral:
@@ -623,6 +682,16 @@ body{{
 .note{{font-size:11px;color:var(--muted);line-height:1.8;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}}
 .footer{{text-align:center;color:var(--light);font-size:11px;margin-top:32px;line-height:1.8;font-family:'IBM Plex Mono',monospace}}
 
+/* ── INVESTMENT TIPS ── */
+.tips-grid{{display:grid;grid-template-columns:1fr 1fr;gap:12px}}
+.tip-group{{background:var(--card);border:1px solid var(--border);border-left:3px solid;border-radius:8px;padding:14px 16px;box-shadow:var(--shadow-xs)}}
+.tip-cat{{font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px}}
+.tip-row{{padding:8px 0;border-top:1px solid var(--s1)}}
+.tip-row:first-of-type{{border-top:none;padding-top:0}}
+.tip-title{{font-size:12.5px;font-weight:600;line-height:1.4;margin-bottom:3px}}
+.tip-body{{font-size:11.5px;color:var(--muted);line-height:1.6}}
+@media(max-width:600px){{.tips-grid{{grid-template-columns:1fr}}}}
+
 /* ── MOBILE BOTTOM NAV ── */
 .mobile-nav{{display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(255,255,255,.96);border-top:1px solid var(--border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding-bottom:env(safe-area-inset-bottom)}}
 .mobile-nav-inner{{display:flex}}
@@ -798,6 +867,14 @@ body{{
   <div class="card">
     <div class="sig-list">{regime_sigs}</div>
     <div class="reg-summary" style="border-color:{rc};color:{rc}">{reg_summary}</div>
+  </div>
+
+  <div class="sec-title" style="margin-top:24px">💡 Investment Tips · Hard-Won Wisdom</div>
+  <div class="tips-grid">
+    {_render_tips()}
+  </div>
+  <div style="font-size:10px;color:var(--light);text-align:center;margin-top:10px;font-family:'IBM Plex Mono',monospace">
+    Distilled from strategy reviews · revisited periodically as the framework evolves
   </div>
 
 </div>

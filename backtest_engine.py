@@ -176,12 +176,15 @@ def bh_sim(prices, contrib):
 
 # ── strategy simulation ───────────────────────────────────────
 
-def simulate_strategy(m, dates, cap=None):
+def simulate_strategy(m, dates, cap=None, reinvest=False):
     """
     Fully-invested adaptive strategy.
-    cap=None  -> no cap (pure apples-to-apples).
-    cap=0.25  -> each December, trim any ETF above 25% of total NAV to cash
-                 ('Adaptive strategy with cash').
+    cap=None              -> no cap (pure apples-to-apples).
+    cap=0.25, reinvest=F  -> each December trim any ETF above 25% of NAV to CASH
+                             ('Adaptive strategy with cash').
+    cap=0.25, reinvest=T  -> each December rebalance to the cap, redeploying the
+                             excess into the under-cap ETFs so it stays fully
+                             invested. With 4 ETFs a 25% cap = equal-weight 25% each.
     Returns a dict with rows, twr/wts/twr_idx, alloc_hist (incl Cash), final, cashflows.
     """
     shares = {e: 0.0 for e in ETFS}
@@ -229,10 +232,11 @@ def simulate_strategy(m, dates, cap=None):
                 cost[etf]   += dollars
                 buys[etf]   += dollars
 
-        # ANNUAL DECEMBER REBALANCE: cap each ETF at `cap` of total NAV; excess -> cash
+        # ANNUAL DECEMBER REBALANCE: cap each ETF at `cap` of total NAV
         if cap and dt.month == 12:
             nav_now = sum(shares[e] * px[e] for e in ETFS) + cash
             capval = cap * nav_now
+            # sell anything above the cap to cash
             for e in ETFS:
                 val = shares[e] * px[e]
                 if val > capval + 1:
@@ -242,6 +246,18 @@ def simulate_strategy(m, dates, cap=None):
                     cost[e]   *= (1 - frac)
                     cash += sh * px[e] * (1 - TXN_COST)
                     sells[e] += sh * px[e]
+            # fully-invested mode: redeploy the freed cash into under-cap ETFs
+            # (with 4 ETFs and a 25% cap this lands at equal-weight 25% each)
+            if reinvest:
+                for e in ETFS:
+                    val = shares[e] * px[e]
+                    need = capval - val
+                    if need > 1 and cash > 1:
+                        spend = min(need, cash)
+                        shares[e] += spend * (1 - TXN_COST) / px[e]
+                        cost[e]   += spend
+                        cash      -= spend
+                        buys[e]   += spend
 
         holdings_val = sum(shares[e] * px[e] for e in ETFS)
         nav = holdings_val + cash
@@ -275,8 +291,9 @@ def run():
     dates = m.index
     print(f"Backtest window: {dates[0].date()} -> {dates[-1].date()}  ({len(dates)} months)")
 
-    main   = simulate_strategy(m, dates, cap=None)
-    capped = simulate_strategy(m, dates, cap=0.25)
+    main      = simulate_strategy(m, dates, cap=None)
+    capped    = simulate_strategy(m, dates, cap=0.25)                  # excess -> cash
+    capped_fi = simulate_strategy(m, dates, cap=0.25, reinvest=True)   # fully invested (equal-wt)
 
     rows = main["rows"]
     twr, wts, twr_idx = main["twr"], main["wts"], main["twr_idx"]
@@ -310,6 +327,8 @@ def run():
     strat = metrics("Adaptive strategy", twr, wts, twr_idx, final)
     strat_cap = metrics("Adaptive + cash (25% cap)",
                         capped["twr"], capped["wts"], capped["twr_idx"], capped["final"])
+    strat_cap_fi = metrics("Adaptive + 25% cap (fully invested)",
+                           capped_fi["twr"], capped_fi["wts"], capped_fi["twr_idx"], capped_fi["final"])
 
     # ── Buy & Hold benchmarks for every ETF ──
     benchmarks, bench_curves = {}, {}
@@ -324,6 +343,7 @@ def run():
         "dates": [d.strftime("%Y-%m") for d in dates],
         "strat": [round(v, 4) for v in ([1.0] + twr_idx)],
         "capped": [round(v, 4) for v in ([1.0] + capped["twr_idx"])],
+        "capped_fi": [round(v, 4) for v in ([1.0] + capped_fi["twr_idx"])],
         **bench_curves,
     }
 
@@ -346,7 +366,7 @@ def run():
         "monthly_contribution": MONTHLY_BUDGET, "contributed": round(contributed),
         "growth_dollars": round(final - contributed),
         "growth_pct_of_final": round((final - contributed) / final * 100, 1),
-        "strategy": strat, "strategy_capped": strat_cap,
+        "strategy": strat, "strategy_capped": strat_cap, "strategy_capped_fi": strat_cap_fi,
         "bh": benchmarks["QQQ"], "benchmarks": benchmarks,
         "regime_distribution": {k: int(v) for k, v in dist.items()},
         "rf_annual": RF_ANNUAL,
@@ -354,6 +374,8 @@ def run():
         "alloc": {"dates": curve["dates"], **{e: alloc_hist[e] for e in ETFS}},
         "alloc_capped": {"dates": curve["dates"], **{e: capped["alloc_hist"][e] for e in ETFS},
                          "Cash": capped["alloc_hist"]["Cash"]},
+        "alloc_capped_fi": {"dates": curve["dates"], **{e: capped_fi["alloc_hist"][e] for e in ETFS},
+                            "Cash": capped_fi["alloc_hist"]["Cash"]},
     }
 
     _write_excel(df, summary)
@@ -366,7 +388,8 @@ def run():
         print(f"{nm:22s}{('$'+format(d['final'],',')):>16s}{str(d['multiple'])+'x':>8s}"
               f"{str(d['twr_cagr'])+'%':>8s}{str(d['inv_sharpe']):>7s}{str(d['maxdd_pct'])+'%':>8s}")
     line("Adaptive strategy", strat)
-    line("Adaptive + 25% cap", strat_cap)
+    line("Adaptive +25% cap cash", strat_cap)
+    line("Adaptive +25% cap FI", strat_cap_fi)
     for e in ETFS:
         line(f"B&H {e}", benchmarks[e])
     print(f"Wrote {XLSX} and {JSON}")

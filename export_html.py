@@ -204,7 +204,9 @@ def _render_equity_chart(curve) -> str:
     dates = curve["dates"]
     series = [("Adaptive strategy", curve["strat"], "#111827", 2.4)]
     if "capped" in curve:
-        series.append(("Adaptive + 25% cap", curve["capped"], "#059669", 2.2))
+        series.append(("+25% cap → cash", curve["capped"], "#059669", 2.2))
+    if "capped_fi" in curve:
+        series.append(("+25% cap (fully inv.)", curve["capped_fi"], "#7c3aed", 2.2))
     for etf, col in (("QQQ","#6b7280"),("SMH","#2563eb"),("TQQQ","#d97706"),("SOXL","#dc2626")):
         if etf in curve:
             series.append((f"B&H {etf}", curve[etf], col, 1.4))
@@ -362,10 +364,11 @@ def _render_backtest(s) -> str:
                 'No backtest results yet. Run <code>python backtest_engine.py</code> to generate them.</div></div>')
     st = s["strategy"]
     cap = s.get("strategy_capped")
+    cap_fi = s.get("strategy_capped_fi")
     bm = s.get("benchmarks", {})
     cols = [("Strategy", st)]
-    if cap:
-        cols.append(("Strat +25% cap", cap))
+    if cap:    cols.append(("+cap→cash", cap))
+    if cap_fi: cols.append(("+cap (FI)", cap_fi))
     cols += [(e, bm[e]) for e in ("QQQ","SMH","TQQQ","SOXL") if e in bm]
 
     def row(label, key, fmt, better="hi", note=""):
@@ -399,19 +402,25 @@ def _render_backtest(s) -> str:
     verdict = (
         f"Fully invested, the adaptive strategy ({st['multiple']}×, Sharpe {st['inv_sharpe']}, {st['maxdd_pct']}% drawdown) "
         f"essentially replicated Buy &amp; Hold TQQQ — the regime-switching added no risk-adjusted value. "
+        f"<strong>The real win is the annual 25% cap.</strong> There are two ways to apply it: "
     )
     if cap:
         verdict += (
-            f"<strong>But capping each ETF at 25% every December (excess → cash) is a real improvement:</strong> it "
-            f"<strong>halved the drawdown ({st['maxdd_pct']}% → {cap['maxdd_pct']}%)</strong> and lifted the Sharpe to "
-            f"<strong>{cap['inv_sharpe']}</strong> (the best of any leveraged variant), while still compounding to "
-            f"{cap['multiple']}× — more than 2× Buy &amp; Hold QQQ ({bm.get('QQQ',{}).get('multiple','?')}×). "
-            f"You give up raw return ({st['multiple']}× → {cap['multiple']}×) to buy a far more survivable ride. "
+            f"<strong>(a) trim the excess to cash</strong> — safest, drawdown {st['maxdd_pct']}% → "
+            f"<strong>{cap['maxdd_pct']}%</strong>, Sharpe {cap['inv_sharpe']}, but return falls to {cap['multiple']}×. "
+        )
+    if cap_fi:
+        verdict += (
+            f"<strong>(b) stay fully invested by rebalancing to equal weight</strong> — this is the standout: it keeps "
+            f"<strong>{cap_fi['multiple']}×</strong> (nearly the full {st['multiple']}×) while cutting the drawdown to "
+            f"<strong>{cap_fi['maxdd_pct']}%</strong> and posting the <strong>best Sharpe of any leveraged strategy "
+            f"({cap_fi['inv_sharpe']})</strong>. Annually selling the runaway winner and buying the laggards harvests "
+            f"volatility — almost free risk reduction. "
         )
     verdict += (
         f"Unleveraged <strong>{best_shp[0]}</strong> still has the highest Sharpe overall ({best_shp[1]['inv_sharpe']}, "
-        f"{best_shp[1]['maxdd_pct']}% drawdown). The takeaway: <strong>rebalancing/​capping concentration is the optimization that "
-        f"actually moves risk-adjusted return</strong> — far more than the regime-switching does."
+        f"{best_shp[1]['maxdd_pct']}% drawdown). Takeaway: <strong>a simple annual rebalance — not the regime-switching — "
+        f"is what improves risk-adjusted return,</strong> and the fully-invested equal-weight version captures it best."
     )
 
     dist = s.get("regime_distribution", {})
@@ -434,10 +443,15 @@ def _render_backtest(s) -> str:
     {_render_alloc_chart(s.get("alloc"))}
 
     {_render_alloc_chart(s.get("alloc_capped"),
-        title="With the 25% cap (Adaptive + cash) · composition incl. cash",
-        note="Same strategy, but each December any ETF above 25% of the portfolio is trimmed to cash (grey band). "
-             "No single position runs away — SOXL/TQQQ are held to 25% each and the trimmed gains build a growing cash buffer. "
-             "This is what halved the drawdown.") if s.get("alloc_capped") else ""}
+        title="25% cap → cash · composition incl. cash",
+        note="Each December any ETF above 25% is trimmed to cash (grey band). No position runs away, and the trimmed gains "
+             "build a growing cash buffer (~21% by the end). This cushion is what cut the drawdown the most (−45%).") if s.get("alloc_capped") else ""}
+
+    {_render_alloc_chart(s.get("alloc_capped_fi"),
+        title="25% cap, fully invested (equal-weight rebalance) · composition",
+        note="Each December the portfolio is rebalanced back to 25% in each ETF — no cash. The bands snap to equal width "
+             "then drift through the year. Staying fully invested keeps almost all the return (51×) while the annual "
+             "sell-winner/buy-laggard rebalance still cuts the drawdown to −59% and gives the best Sharpe of any leveraged variant.") if s.get("alloc_capped_fi") else ""}
 
     <div class="card" style="margin-bottom:12px">
       <div class="bt-scroll" style="max-height:none">

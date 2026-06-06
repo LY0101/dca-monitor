@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 backtest_results.csv
 history.csv
+
+# Excel lock files
+~$*.xlsx
